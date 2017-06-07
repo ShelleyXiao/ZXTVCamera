@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">ZXTVCamera</string>
+
+    <string name="open_devices_promate">按"OK"键选择需要打开的设备</string>
+    <string name="device_attach">设备已链接</string>
+    <string name="device_dettach">设备已断开</string>
 </resources>

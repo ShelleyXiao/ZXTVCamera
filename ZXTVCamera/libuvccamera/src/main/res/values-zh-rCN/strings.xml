@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~  UVCCamera
   ~  library and sample to access to UVC web camera on non-rooted Android device
@@ -20,8 +21,9 @@
   ~  Files in the libjpeg-turbo, libusb, libuvc, rapidjson folder
   ~  may have a different license, see the respective files.
   -->
-
 <resources>
-	<string name="app_name">encoder</string>
-
+    <string name="select">选择USB摄像设备</string>
+    <string name="camera">摄像</string>
+    <string name="refresh">刷新</string>
+    <string name="no_device">未找到USB摄像设备</string>
 </resources>

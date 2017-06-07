@@ -3,11 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#ff000000"
-    tools:context="com.zx.tv.camera.MainActivity"
-    android:id="@+id/rootLayout">
+    tools:context="com.zx.tv.camera.MainActivity">
 
     <!--<TextView-->
     <!--android:layout_width="wrap_content"-->
@@ -19,6 +19,7 @@
     <!--app:layout_constraintTop_toTopOf="parent"/>-->
 
     <LinearLayout
+        android:id="@+id/dual_camera_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
@@ -52,6 +53,16 @@
                 android:layout_alignTop="@+id/camera_view_L"
                 />
 
+            <TextView
+                android:id="@+id/camera_open_promate_L"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="@string/open_devices_promate"
+                android:textColor="@color/CORNSILK"
+                android:textSize="24sp"
+                />
+
         </RelativeLayout>
 
         <RelativeLayout
@@ -78,11 +89,66 @@
                 android:layout_alignLeft="@+id/camera_view_R"
                 android:layout_alignRight="@+id/camera_view_R"
                 android:layout_alignTop="@+id/camera_view_R"
-                 />
+                />
+
+            <TextView
+                android:id="@+id/camera_open_promate_R"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="@string/open_devices_promate"
+                android:textColor="@color/CORNSILK"
+                android:textSize="24sp"
+                />
 
 
         </RelativeLayout>
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/camera_layout_larger"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_weight="1">
+
+            <com.serenegiant.widget.UVCCameraTextureView
+                android:id="@+id/camera_view_larger"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
+
+        </FrameLayout>
+
+
+        <RelativeLayout
+            android:layout_width="260dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_camera_pattern"
+            >
+
+            <com.zx.tv.camera.widget.ShutterButton
+                android:id="@+id/shutter_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@drawable/btn_shutter"
+                android:clickable="true"
+                android:focusable="true"
+                android:scaleType="center"/>
+
+            <include layout="@layout/mode_picker"/>
+
+        </RelativeLayout>
     </LinearLayout>
 
 </RelativeLayout>

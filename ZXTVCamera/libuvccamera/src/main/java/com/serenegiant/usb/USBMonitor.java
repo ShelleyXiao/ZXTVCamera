@@ -330,6 +330,7 @@ public final class USBMonitor {
 		final List<UsbDevice> result = new ArrayList<UsbDevice>();
 		if (deviceList != null) {
 			for (final UsbDevice device: deviceList.values() ) {
+				Log.d("debug", "UsbDevice: " + device);
 				if ((filter == null) || (filter.matches(device) && !filter.isExclude)) {
 					result.add(device);
 				}

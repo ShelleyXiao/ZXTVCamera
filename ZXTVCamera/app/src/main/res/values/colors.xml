@@ -3,4 +3,7 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="icon_disabled_color">#DD777777</color>
+    <color name="review_control_pressed_color">#FF33B5E5</color>
 </resources>
