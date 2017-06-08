@@ -4,4 +4,19 @@
     <string name="open_devices_promate">按"OK"键选择需要打开的设备</string>
     <string name="device_attach">设备已链接</string>
     <string name="device_dettach">设备已断开</string>
+
+    <string name="image_file_name_format" translatable="false">"'IMG'_yyyyMMdd_HHmmss"</string>
+    <string name="video_file_name_format" translatable="false">"'VID'_yyyyMMdd_HHmmss"</string>
+    <string name="rec_time">录像时间: %s</string>
+    <string name="camera_error_title">"相机故障"</string>
+    <string name="dialog_ok">"确定"</string>
+    <string name="cannot_connect_camera">"无法连接到相机。"</string>
+
+    <string name="no_storage">"使用相机前请先装载 USB 存储设备。"</string>
+    <string name="not_enough_space">"SD 卡已满。"</string>
+    <string name="preparing_sd">"正在准备 USB 存储设备..."</string>
+    <string name="access_sd_fail">"无法访问 USB 存储设备。"</string>
+    <string name="spaceIsLow_content">"USB 存储设备空间不足，删除某些照片或者其他文件。"</string>
+
+    <string name="time_lapse_title">"延时录制"</string>
 </resources>

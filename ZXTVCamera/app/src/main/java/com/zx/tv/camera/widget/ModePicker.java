@@ -27,7 +27,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
-
 import com.zx.tv.camera.R;
 
 /**
@@ -41,7 +40,7 @@ public class ModePicker extends RelativeLayout implements View.OnClickListener {
 
     private static final String TAG = "ModePicker";
     // Total mode number
-    private static final int MODE_NUM = 3;
+    private static final int MODE_NUM = 2;
 
     /**
      * A callback to be called when the user wants to switch activity.
@@ -57,13 +56,13 @@ public class ModePicker extends RelativeLayout implements View.OnClickListener {
     private OnModeChangeListener mListener;
     private View mModeSelectionFrame;
     private RotateImageView mModeSelectionIcon[];
-    private RotateImageView mCurrentModeFrame;
-    private ImageView mCurrentModeIcon[];
+    private View mCurrentModeFrame;
+    private RotateImageView mCurrentModeIcon[];
     private View mCurrentModeBar;
     private boolean mSelectionEnabled;
 
 
-    private int mCurrentMode = 0;
+    private int mCurrentMode = 1;
     private Animation mFadeIn, mFadeOut;
 
     public ModePicker(Context context, AttributeSet attrs) {
@@ -75,7 +74,6 @@ public class ModePicker extends RelativeLayout implements View.OnClickListener {
         mFadeOut = AnimationUtils.loadAnimation(
                 context, R.anim.mode_selection_fade_out);
         mFadeOut.setAnimationListener(mAnimationListener);
-//        PopupManager.getInstance(context).setOnOtherPopupShowedListener(this);
     }
 
     protected void onFinishInflate() {
@@ -83,28 +81,28 @@ public class ModePicker extends RelativeLayout implements View.OnClickListener {
 
         mModeSelectionFrame = findViewById(R.id.mode_selection);
         mModeSelectionIcon = new RotateImageView[MODE_NUM];
-        mModeSelectionIcon[MODE_PANORAMA] =
-                (RotateImageView) findViewById(R.id.mode_panorama);
+//        mModeSelectionIcon[MODE_PANORAMA] =
+//                (RotateImageView) findViewById(R.id.mode_panorama);
         mModeSelectionIcon[MODE_VIDEO] =
                 (RotateImageView) findViewById(R.id.mode_video);
         mModeSelectionIcon[MODE_CAMERA] =
                 (RotateImageView) findViewById(R.id.mode_camera);
 
         // The current mode frame is for Phone UI only.
-
         // current_mode_bar is only for tablet.
         mCurrentModeBar = findViewById(R.id.current_mode_bar);
         enableModeSelection(true);
-
         registerOnClickListener();
     }
 
     private void registerOnClickListener() {
+//        if (mCurrentModeFrame != null) {
+//            mCurrentModeFrame.setOnClickListener(this);
+//        }
         for (int i = 0; i < MODE_NUM; ++i) {
             mModeSelectionIcon[i].setOnClickListener(this);
         }
     }
-
 
     private AnimationListener mAnimationListener = new AnimationListener() {
         public void onAnimationEnd(Animation animation) {
@@ -143,7 +141,6 @@ public class ModePicker extends RelativeLayout implements View.OnClickListener {
 
     public void onClick(View view) {
         if (view == mCurrentModeFrame) {
-//            PopupManager.getInstance(getContext()).notifyShowPopup(this);
             enableModeSelection(true);
         } else {
             // Set the selected mode as the current one and switch to it.
@@ -175,14 +172,14 @@ public class ModePicker extends RelativeLayout implements View.OnClickListener {
         return true;
     }
 
-//    public void setOrientation(int orientation) {
-//        for (int i = 0; i < MODE_NUM; ++i) {
-//            mModeSelectionIcon[i].setOrientation(orientation);
-//            if (mCurrentModeFrame != null) {
-//                mCurrentModeIcon[i].setOrientation(orientation);
-//            }
-//        }
-//    }
+    public void setOrientation(int orientation) {
+        for (int i = 0; i < MODE_NUM; ++i) {
+            mModeSelectionIcon[i].setOrientation(orientation);
+            if (mCurrentModeFrame != null) {
+                mCurrentModeIcon[i].setOrientation(orientation);
+            }
+        }
+    }
 
     @Override
     public void setEnabled(boolean enabled) {
@@ -233,6 +230,8 @@ public class ModePicker extends RelativeLayout implements View.OnClickListener {
                         mModeSelectionIcon[target].getDrawable());
             }
         }
+
+        invalidate();
     }
 
     @Override

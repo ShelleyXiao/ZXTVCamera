@@ -6,4 +6,9 @@
 
     <color name="icon_disabled_color">#DD777777</color>
     <color name="review_control_pressed_color">#FF33B5E5</color>
+    <color name="mode_selection_border">#33B5E5</color>
+
+    <color name="recording_time_elapsed_text">#FFFFFFFF</color>
+    <color name="recording_time_remaining_text">#FFFF0033</color>
+    <color name="on_viewfinder_label_background_color">#77333333</color>
 </resources>

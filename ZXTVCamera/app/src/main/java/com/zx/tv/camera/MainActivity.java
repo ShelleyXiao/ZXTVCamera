@@ -1,12 +1,27 @@
 package com.zx.tv.camera;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
+import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
+import android.widget.Chronometer;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -16,16 +31,49 @@ import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.UVCCamera;
+import com.serenegiant.usbcameracommon.AbstractUVCCameraHandler;
 import com.serenegiant.usbcameracommon.UVCCameraHandler;
 import com.serenegiant.widget.CameraViewInterface;
+import com.serenegiant.widget.UVCCameraTextureView;
+import com.zx.tv.camera.capture.Storage;
+import com.zx.tv.camera.capture.Thumbnail;
+import com.zx.tv.camera.utils.Exif;
 import com.zx.tv.camera.utils.Logger;
+import com.zx.tv.camera.utils.OnScreenHint;
+import com.zx.tv.camera.utils.Util;
+import com.zx.tv.camera.video.Encoder;
+import com.zx.tv.camera.video.SurfaceEncoder;
+import com.zx.tv.camera.widget.ModePicker;
+import com.zx.tv.camera.widget.ShutterButton;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Locale;
 
 public class MainActivity extends BaseActivity implements View.OnClickListener
-        , CameraDialog.CameraDialogParent {
+        , CameraDialog.CameraDialogParent, ModePicker.OnModeChangeListener
+        , ShutterButton.OnShutterButtonListener {
+
+    private static final int CAPTURE_STOP = 0;
+    private static final int CAPTURE_PREPARE = 1;
+    private static final int CAPTURE_RUNNING = 2;
+
+    private static final int UPDATE_RECORD_TIME = 5;
+    private static final int ENABLE_SHUTTER_BUTTON = 6;
+    private static final int UPDATE_THUMBNAIL = 7;
+
+    private static final long SHUTTER_BUTTON_TIMEOUT = 500L; // 500ms
 
     private static final float[] BANDWIDTH_FACTORS = {0.5F, 0.5F};
 
+    private final Object mSync = new Object();
+
     private USBMonitor mUSBMonitor;
+    private UVCCamera mUVCCamera; // 拍照 录像
 
     private View mDualCameraView;
 
@@ -42,16 +90,49 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     private LinearLayout mLargerCameraLayout;
     private UVCCameraHandler mUVCCameraHandlerLarger;
-    private CameraViewInterface mUVCCameraViewLarger;
+    private UVCCameraTextureView mUVCCameraViewLarger;
     private Surface mLargerPrSurface;
     private TextView tvCameraPromateR;
 
     private USBMonitor.UsbControlBlock mUsbControlBlockL;
     private USBMonitor.UsbControlBlock mUsbControlBlockR;
 
+    private ModePicker mModePicker;
+    private Chronometer mChronometer;
+    private ShutterButton mShutterButton;
+
     private SparseArray<USBMonitor.UsbControlBlock> mUsbControlBlockSparseArray = new SparseArray<>();
 
+    private ContentResolver mContentResolver;
+
+    private Thumbnail mThumbnail;
+
+    private final Handler mHandler = new MainHandler();
+
     private boolean isLarger;
+
+    private int mCurrrentMode = ModePicker.MODE_VIDEO;
+
+    /**************video*****************/
+    // Default 0. If it is larger than 0, the camcorder is in time lapse mode.
+    private int mMaxVideoDurationInMs = 0;
+    private int mTimeBetweenTimeLapseFrameCaptureMs = 0;
+    private View mTimeLapseLabel;
+    private LinearLayout mLabelsLinearLayout;
+    private TextView mRecordingTimeView;
+    private long mRecordingStartTime;
+    private boolean mRecordingTimeCountsDown = false;
+
+    private String mVideoFilename;
+    private ParcelFileDescriptor mVideoFileDescriptor;
+
+    private CamcorderProfile mProfile;
+
+    private String mCurrentVideoFilename;
+    private Uri mCurrentVideoUri;
+    private ContentValues mCurrentVideoValues;
+    private Encoder mEncoder;
+    private int mCaptureState = 0;
 
 
     @Override
@@ -60,6 +141,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         setContentView(R.layout.activity_main);
 
         initView();
+
+        initCamera();
 
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
     }
@@ -153,11 +236,23 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 }
             }
         } else if (v.getId() == R.id.camera_layout_larger) {
-            if (mUVCCameraHandlerLarger != null) {
-                if (!mUVCCameraHandlerLarger.isOpened()) {
-                    CameraDialog.showDialog(this);
-                } else {
-                    mUVCCameraHandlerLarger.close();
+//                if (mUVCCameraHandlerLarger != null) {
+//                    if (!mUVCCameraHandlerLarger.isOpened()) {
+//                        CameraDialog.showDialog(this);
+//                    } else {
+//                        mUVCCameraHandlerLarger.close();
+//                    }
+//                }
+        } else if (v.getId() == R.id.shutter_button) {
+            if (mCurrrentMode == ModePicker.MODE_CAMERA) {
+
+            } else if (mCurrrentMode == ModePicker.MODE_VIDEO) {
+                if (checkPermissionWriteExternalStorage()) {
+                    if (mCaptureState == CAPTURE_STOP) {
+                        startCapture();
+                    } else {
+                        stopCapture();
+                    }
                 }
             }
         }
@@ -201,12 +296,67 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
         mLargerCameraLayout = (LinearLayout) findViewById(R.id.camera_layout_larger);
         mLargerCameraLayout.setOnClickListener(this);
-        mUVCCameraViewLarger = (CameraViewInterface) findViewById(R.id.camera_view_larger);
+        mUVCCameraViewLarger = (UVCCameraTextureView) findViewById(R.id.camera_view_larger);
+//        mUVCCameraViewLarger.setSurfaceTextureListener(mSurfaceTextureListener);
 //        mUVCCameraViewLarger.setAspectRatio(UVCCamera.DEFAULT_PREVIEW_WIDTH / UVCCamera.DEFAULT_PREVIEW_HEIGHT);
         mUVCCameraHandlerLarger = UVCCameraHandler.createHandler(this, mUVCCameraViewLarger,
                 UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT);
 
+        mModePicker = (ModePicker) findViewById(R.id.mode_picker);
+        mModePicker.setOnModeChangeListener(this);
 
+        mChronometer = (Chronometer) findViewById(R.id.chronometer);
+        mChronometer.setVisibility(View.GONE);
+        mShutterButton = (ShutterButton) findViewById(R.id.shutter_button);
+        mShutterButton.setEnabled(false);
+
+
+        mRecordingTimeView = (TextView) findViewById(R.id.recording_time);
+        mTimeLapseLabel = findViewById(R.id.time_lapse_label);
+        mLabelsLinearLayout = (LinearLayout) findViewById(R.id.labels);
+    }
+
+    private void initCamera() {
+        mUVCCameraHandlerLarger.addCallback(new AbstractUVCCameraHandler.CameraCallback() {
+            @Override
+            public void onOpen() {
+                Logger.getLogger().d("camera onOpen");
+            }
+
+            @Override
+            public void onClose() {
+                Logger.getLogger().d("camera onClose");
+            }
+
+            @Override
+            public void onStartPreview() {
+                Logger.getLogger().d("camera onStartPreview");
+                mModePicker.setCurrentMode(mCurrrentMode);
+                mModePicker.setEnabled(true);
+                mModePicker.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onStopPreview() {
+                Logger.getLogger().d("camera onStopPreview");
+            }
+
+            @Override
+            public void onStartRecording() {
+                Logger.getLogger().d("camera onStartRecording");
+            }
+
+            @Override
+            public void onStopRecording() {
+                Logger.getLogger().d("camera onStopRecording");
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Logger.getLogger().e("camera " + e);
+                Util.showError(MainActivity.this, R.string.cannot_connect_camera);
+            }
+        });
     }
 
     private final USBMonitor.OnDeviceConnectListener mOnDeviceConnectListener = new USBMonitor.OnDeviceConnectListener() {
@@ -256,6 +406,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 final SurfaceTexture st = mUVCCameraViewLarger.getSurfaceTexture();
                 mUVCCameraHandlerLarger.startPreview(new Surface(st));
             }
+
         }
 
         @Override
@@ -288,6 +439,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                     @Override
                     public void run() {
                         mUVCCameraHandlerLarger.close();
+                        synchronized (mSync) {
+                            if (mUVCCamera != null) {
+                                mUVCCamera.close();
+                            }
+                        }
                         if (mLargerPrSurface != null) {
                             mLargerPrSurface.release();
                             mLargerPrSurface = null;
@@ -323,20 +479,66 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         isLarger = true;
         mDualCameraView.setVisibility(View.GONE);
         mLargerCameraLayout.setVisibility(View.VISIBLE);
+
+        mShutterButton.setBackgroundResource(R.drawable.btn_shutter_video);
+        mShutterButton.setOnShutterButtonListener(this);
+        mShutterButton.requestFocus();
+
+//        queueEvent(new Runnable() {
+//            @Override
+//            public void run() {
+//                USBMonitor.UsbControlBlock controlBlock = mUsbControlBlockSparseArray.get(index);
+//                if (null != controlBlock) {
+//                    if (!mUVCCameraHandlerLarger.isOpened()) {
+//                        mUVCCameraHandlerLarger.open(controlBlock);
+//                        final SurfaceTexture st = mUVCCameraViewLarger.getSurfaceTexture();
+//                        mUVCCameraHandlerLarger.startPreview(new Surface(st));
+//                    }
+//                }
+//            }
+//        }, 100);
+
+        synchronized (mSync) {
+            if (mUVCCamera != null) {
+                mUVCCamera.destroy();
+                mUVCCamera = null;
+            }
+        }
         queueEvent(new Runnable() {
             @Override
             public void run() {
-                USBMonitor.UsbControlBlock controlBlock = mUsbControlBlockSparseArray.get(index);
-                if (null != controlBlock) {
-                    if (!mUVCCameraHandlerLarger.isOpened()) {
-                        mUVCCameraHandlerLarger.open(controlBlock);
-                        final SurfaceTexture st = mUVCCameraViewLarger.getSurfaceTexture();
-                        mUVCCameraHandlerLarger.startPreview(new Surface(st));
+                final UVCCamera camera = new UVCCamera();
+                USBMonitor.UsbControlBlock ctrlBlock = mUsbControlBlockSparseArray.get(index);
+                camera.open(ctrlBlock);
+                if (mLargerPrSurface != null) {
+                    mLargerPrSurface.release();
+                    mLargerPrSurface = null;
+                }
+                try {
+                    camera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_MJPEG);
+                } catch (final IllegalArgumentException e) {
+                    try {
+                        // fallback to YUV mode
+                        camera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
+                    } catch (final IllegalArgumentException e1) {
+                        camera.destroy();
+                        Util.showError(MainActivity.this, R.string.cannot_connect_camera);
+                        return;
                     }
                 }
-            }
-        }, 100);
+                final SurfaceTexture st = mUVCCameraViewLarger.getSurfaceTexture();
+                if (st != null) {
+                    mLargerPrSurface = new Surface(st);
+                    camera.setPreviewDisplay(mLargerPrSurface);
+                    camera.startPreview();
 
+                }
+                synchronized (mSync) {
+                    mUVCCamera = camera;
+                }
+            }
+        }, 0);
+        mShutterButton.setEnabled(true);
         findViewById(R.id.mode_picker).setVisibility(View.VISIBLE);
     }
 
@@ -345,6 +547,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         mDualCameraView.setVisibility(View.VISIBLE);
         mLargerCameraLayout.setVisibility(View.GONE);
         mUVCCameraHandlerLarger.close();
+
+        releaseLargerCamera();
 
         final USBMonitor.UsbControlBlock leftControlBlock = mUsbControlBlockSparseArray.get(0);
         if (null != leftControlBlock) {
@@ -374,6 +578,529 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
             }, 100);
         }
 
+    }
+
+    @Override
+    public boolean onModeChanged(int newMode) {
+        return false;
+    }
+
+
+    //**********************************************************************
+    private final TextureView.SurfaceTextureListener mSurfaceTextureListener = new TextureView.SurfaceTextureListener() {
+
+        @Override
+        public void onSurfaceTextureAvailable(final SurfaceTexture surface, final int width, final int height) {
+        }
+
+        @Override
+        public void onSurfaceTextureSizeChanged(final SurfaceTexture surface, final int width, final int height) {
+        }
+
+        @Override
+        public boolean onSurfaceTextureDestroyed(final SurfaceTexture surface) {
+            if (mLargerPrSurface != null) {
+                mLargerPrSurface.release();
+                mLargerPrSurface = null;
+            }
+            return true;
+        }
+
+        @Override
+        public void onSurfaceTextureUpdated(final SurfaceTexture surface) {
+            if (mEncoder != null && mCaptureState == CAPTURE_RUNNING) {
+                mEncoder.frameAvailable();
+            }
+        }
+    };
+
+    /**
+     * start capturing
+     */
+    private final void startCapture() {
+        if (mEncoder == null && (mCaptureState == CAPTURE_STOP)) {
+            mCaptureState = CAPTURE_PREPARE;
+            updateAndShowStorageHint();
+            if (mStorageSpace < Storage.LOW_STORAGE_THRESHOLD) {
+                Logger.getLogger().e("Storage issue, ignore the start request");
+                return;
+            }
+            mCurrentVideoUri = null;
+            queueEvent(new Runnable() {
+                @Override
+                public void run() {
+                    generateVideoFilename(MediaRecorder.OutputFormat.MPEG_4);
+                    Logger.getLogger().d("**************Videoname = " + mVideoFilename);
+                    final String path = mVideoFilename;
+                    if (!TextUtils.isEmpty(path)) {
+                        mEncoder = new SurfaceEncoder(path);
+                        mEncoder.setEncodeListener(mEncodeListener);
+                        try {
+                            mEncoder.prepare();
+                            mEncoder.startRecording();
+                        } catch (final IOException e) {
+                            mCaptureState = CAPTURE_STOP;
+                        }
+                    } else
+                        throw new RuntimeException("Failed to start capture.");
+                }
+            }, 0);
+
+            mChronometer.setVisibility(View.VISIBLE);
+
+            mRecordingStartTime = SystemClock.uptimeMillis();
+            showRecordingUI(true);
+
+            updateRecordingTime();
+        }
+    }
+
+    private void releaseLargerCamera() {
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (mSync) {
+                    if (mUVCCamera != null) {
+                        mUVCCamera.close();
+                    }
+                }
+                if (mLargerPrSurface != null) {
+                    mLargerPrSurface.release();
+                    mLargerPrSurface = null;
+                }
+            }
+        }, 0);
+    }
+
+    /**
+     * stop capture if capturing
+     */
+    private final void stopCapture() {
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (mSync) {
+                    if (mUVCCamera != null) {
+                        mUVCCamera.stopCapture();
+                    }
+                }
+                if (mEncoder != null) {
+                    mEncoder.stopRecording();
+                    mEncoder = null;
+                }
+            }
+        }, 0);
+        mChronometer.setVisibility(View.GONE);
+        mCurrentVideoFilename = mVideoFilename;
+        showRecordingUI(false);
+        addVideoToMediaStore();
+    }
+
+    /**
+     * callbackds from Encoder
+     */
+    private final Encoder.EncodeListener mEncodeListener = new Encoder.EncodeListener() {
+        @Override
+        public void onPreapared(final Encoder encoder) {
+            synchronized (mSync) {
+                if (mUVCCamera != null) {
+                    mUVCCamera.startCapture(((SurfaceEncoder) encoder).getInputSurface());
+                }
+            }
+            mCaptureState = CAPTURE_RUNNING;
+        }
+
+        @Override
+        public void onRelease(final Encoder encoder) {
+            synchronized (mSync) {
+                if (mUVCCamera != null) {
+                    mUVCCamera.stopCapture();
+                }
+            }
+            mCaptureState = CAPTURE_STOP;
+        }
+    };
+
+    private void generateVideoFilename(int outputFileFormat) {
+        long dateTaken = System.currentTimeMillis();
+        String title = createName(dateTaken);
+        // Used when emailing.
+        String filename = title + Util.convertOutputFormatToFileExt(outputFileFormat);
+        String mime = Util.convertOutputFormatToMimeType(outputFileFormat);
+        mVideoFilename = Storage.DIRECTORY + '/' + filename;
+        mCurrentVideoValues = new ContentValues(7);
+        mCurrentVideoValues.put(MediaStore.Video.Media.TITLE, title);
+        mCurrentVideoValues.put(MediaStore.Video.Media.DISPLAY_NAME, filename);
+        mCurrentVideoValues.put(MediaStore.Video.Media.DATE_TAKEN, dateTaken);
+        mCurrentVideoValues.put(MediaStore.Video.Media.MIME_TYPE, mime);
+        mCurrentVideoValues.put(MediaStore.Video.Media.DATA, mVideoFilename);
+        mCurrentVideoValues.put(MediaStore.Video.Media.RESOLUTION,
+                Integer.toString(mProfile.videoFrameWidth) + "x" +
+                        Integer.toString(mProfile.videoFrameHeight));
+        Logger.getLogger().v( "New video filename: " + mVideoFilename);
+    }
+
+    private String createName(long dateTaken) {
+        Date date = new Date(dateTaken);
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                getString(R.string.video_file_name_format));
+
+        return dateFormat.format(date);
+    }
+
+    private void closeVideoFileDescriptor() {
+        if (mVideoFileDescriptor != null) {
+            try {
+                mVideoFileDescriptor.close();
+            } catch (IOException e) {
+                Logger.getLogger().e( "Fail to close fd" + e);
+            }
+            mVideoFileDescriptor = null;
+        }
+    }
+
+    private static final String getCaptureFile(final String type, final String ext) {
+        final File dir = new File(Environment.getExternalStoragePublicDirectory(type), "USBCameraTest");
+        dir.mkdirs();    // create directories if they do not exist
+        if (dir.canWrite()) {
+            return (new File(dir, getDateTimeString() + ext)).toString();
+        }
+        return null;
+    }
+
+    private static final SimpleDateFormat sDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.US);
+
+    private static final String getDateTimeString() {
+        final GregorianCalendar now = new GregorianCalendar();
+        return sDateTimeFormat.format(now.getTime());
+    }
+
+    private void addVideoToMediaStore() {
+        if (mVideoFileDescriptor == null) {
+            Uri videoTable = Uri.parse("content://media/external/video/media");
+            mCurrentVideoValues.put(MediaStore.Video.Media.SIZE,
+                    new File(mCurrentVideoFilename).length());
+            long duration = SystemClock.uptimeMillis() - mRecordingStartTime;
+            if (duration > 0) {
+                mCurrentVideoValues.put(MediaStore.Video.Media.DURATION, duration);
+            } else {
+                Logger.getLogger().v("Video duration <= 0 : " + duration);
+            }
+            try {
+                mCurrentVideoUri = mContentResolver.insert(videoTable,
+                        mCurrentVideoValues);
+                sendBroadcast(new Intent(android.hardware.Camera.ACTION_NEW_VIDEO,
+                        mCurrentVideoUri));
+            } catch (Exception e) {
+                // We failed to insert into the database. This can happen if
+                // the SD card is unmounted.
+                mCurrentVideoUri = null;
+                mCurrentVideoFilename = null;
+            } finally {
+                Logger.getLogger().v("Current video URI: " + mCurrentVideoUri);
+            }
+        }
+        mCurrentVideoValues = null;
+    }
+
+    private void deleteCurrentVideo() {
+        // Remove the video and the uri if the uri is not passed in by intent.
+        if (mCurrentVideoFilename != null) {
+            deleteVideoFile(mCurrentVideoFilename);
+            mCurrentVideoFilename = null;
+            if (mCurrentVideoUri != null) {
+                mContentResolver.delete(mCurrentVideoUri, null, null);
+                mCurrentVideoUri = null;
+            }
+        }
+        updateAndShowStorageHint();
+    }
+
+    private void deleteVideoFile(String fileName) {
+        Logger.getLogger().d("Deleting video " + fileName);
+        File f = new File(fileName);
+        if (!f.delete()) {
+            Logger.getLogger().d("Could not delete " + fileName);
+        }
+    }
+
+    private OnScreenHint mStorageHint;
+    private long mStorageSpace;
+
+    private void updateAndShowStorageHint() {
+        mStorageSpace = Storage.getAvailableSpace();
+        showStorageHint();
+    }
+
+    private void showStorageHint() {
+        String errorMessage = null;
+        if (mStorageSpace == Storage.UNAVAILABLE) {
+            errorMessage = getString(R.string.no_storage);
+        } else if (mStorageSpace == Storage.PREPARING) {
+            errorMessage = getString(R.string.preparing_sd);
+        } else if (mStorageSpace == Storage.UNKNOWN_SIZE) {
+            errorMessage = getString(R.string.access_sd_fail);
+        } else if (mStorageSpace < Storage.LOW_STORAGE_THRESHOLD) {
+            errorMessage = getString(R.string.spaceIsLow_content);
+        }
+
+        if (errorMessage != null) {
+            if (mStorageHint == null) {
+                mStorageHint = OnScreenHint.makeText(this, errorMessage);
+            } else {
+                mStorageHint.setText(errorMessage);
+            }
+            mStorageHint.show();
+        } else if (mStorageHint != null) {
+            mStorageHint.cancel();
+            mStorageHint = null;
+        }
+    }
+
+    private void showRecordingUI(boolean recording) {
+        if (recording) {
+//            if (mThumbnailView != null) mThumbnailView.setEnabled(false);
+            mShutterButton.setBackgroundResource(R.drawable.btn_shutter_video_recording);
+            mRecordingTimeView.setText("");
+            mRecordingTimeView.setVisibility(View.VISIBLE);
+        } else {
+//            if (mThumbnailView != null) mThumbnailView.setEnabled(true);
+            mShutterButton.setBackgroundResource(R.drawable.btn_shutter_video);
+            mRecordingTimeView.setVisibility(View.GONE);
+        }
+    }
+
+    private long getTimeLapseVideoLength(long deltaMs) {
+        // For better approximation calculate fractional number of frames captured.
+        // This will update the video time at a higher resolution.
+        double numberOfFrames = (double) deltaMs / mTimeBetweenTimeLapseFrameCaptureMs;
+        return (long) (numberOfFrames / 15 * 1000);// surfaceEncoder 定义
+    }
+
+    private void updateRecordingTime() {
+        if (mCaptureState != CAPTURE_RUNNING) {
+            return;
+        }
+        long now = SystemClock.uptimeMillis();
+        long delta = now - mRecordingStartTime;
+
+        // Starting a minute before reaching the max duration
+        // limit, we'll countdown the remaining time instead.
+        boolean countdownRemainingTime = (mMaxVideoDurationInMs != 0
+                && delta >= mMaxVideoDurationInMs - 60000);
+
+        long deltaAdjusted = delta;
+        if (countdownRemainingTime) {
+            deltaAdjusted = Math.max(0, mMaxVideoDurationInMs - deltaAdjusted) + 999;
+        }
+        String text;
+
+        long targetNextUpdateDelay;
+
+        text = Util.millisecondToTimeString(deltaAdjusted, false);
+        targetNextUpdateDelay = 1000;
+
+
+        mRecordingTimeView.setText(text);
+
+        if (mRecordingTimeCountsDown != countdownRemainingTime) {
+            // Avoid setting the color on every update, do it only
+            // when it needs changing.
+            mRecordingTimeCountsDown = countdownRemainingTime;
+
+            int color = getResources().getColor(countdownRemainingTime
+                    ? R.color.recording_time_remaining_text
+                    : R.color.recording_time_elapsed_text);
+
+            mRecordingTimeView.setTextColor(color);
+        }
+
+        long actualNextUpdateDelay = targetNextUpdateDelay - (delta % targetNextUpdateDelay);
+        mHandler.sendEmptyMessageDelayed(
+                UPDATE_RECORD_TIME, actualNextUpdateDelay);
+    }
+
+    @Override
+    public void onShutterButtonFocus(boolean pressed) {
+
+    }
+
+    @Override
+    public void onShutterButtonClick() {
+        if(mCurrrentMode == ModePicker.MODE_VIDEO) {
+            boolean stop =  mCaptureState == CAPTURE_RUNNING;
+
+            if (stop) {
+                stopCapture();
+            } else {
+                startCapture();
+            }
+            mShutterButton.setEnabled(false);
+
+            // Keep the shutter button disabled when in video capture intent
+            // mode and recording is stopped. It'll be re-enabled when
+            // re-take button is clicked.
+            if (stop) {
+                mHandler.sendEmptyMessageDelayed(
+                        ENABLE_SHUTTER_BUTTON, SHUTTER_BUTTON_TIMEOUT);
+            }
+        }
+    }
+
+    //***************************image*******************************************
+
+    private class MainHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case UPDATE_RECORD_TIME:
+                    updateRecordingTime();
+                    break;
+                case UPDATE_THUMBNAIL:
+                    break;
+                case ENABLE_SHUTTER_BUTTON:
+
+                    break;
+            }
+        }
+    }
+
+    private class ImageSaver extends Thread {
+
+        private static final int QUEUE_LIMIT = 3;
+
+        private ArrayList<SaveRequest> mQueue;
+        private Thumbnail mPendingThumbnail;
+        private Object mUpdateThumbnailLock = new Object();
+        private boolean mStop;
+
+        public ImageSaver() {
+            mQueue = new ArrayList<>();
+            start();
+        }
+
+        public void addImage(final byte[] data, int width, int height) {
+            SaveRequest r = new SaveRequest();
+            r.data = data;
+            r.width = width;
+            r.height = height;
+            r.dateTaken = System.currentTimeMillis();
+            synchronized (this) {
+                while (mQueue.size() >= QUEUE_LIMIT) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+
+                    }
+                }
+                mQueue.add(r);
+                notifyAll();
+            }
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                SaveRequest r;
+                synchronized (this) {
+                    if (mQueue.isEmpty()) {
+                        notifyAll();
+
+                        if (mStop) {
+                            break;
+                        }
+
+                        try {
+                            wait();
+                        } catch (InterruptedException e) {
+
+                        }
+                        continue;
+                    }
+                    r = mQueue.get(0);
+                }
+                storeImage(r.data, r.width, r.height, r.dateTaken,
+                        r.previewWidth);
+                synchronized (this) {
+                    mQueue.remove(0);
+                    notifyAll();
+                }
+            }
+
+
+        }
+
+        public void waitDone() {
+            synchronized (this) {
+                while (!mQueue.isEmpty()) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+
+                    }
+                }
+            }
+            updateThumbnail();
+        }
+
+        public void finish() {
+            waitDone();
+            synchronized (this) {
+                mStop = true;
+                notifyAll();
+            }
+            try {
+                join();
+            } catch (InterruptedException e) {
+
+            }
+        }
+
+        private void updateThumbnail() {
+            Thumbnail t;
+            synchronized (mUpdateThumbnailLock) {
+                mHandler.sendEmptyMessage(UPDATE_THUMBNAIL);
+                t = mPendingThumbnail;
+                mPendingThumbnail = null;
+            }
+
+            if (t != null) {
+                mThumbnail = t;
+
+            }
+
+        }
+
+        private void storeImage(final byte[] data, int width, int height, long dateTaken, int previewWidth) {
+            String title = Util.createJpegName(dateTaken);
+            int orientation = Exif.getOrientation(data);
+            Uri uri = Storage.addImage(mContentResolver, title, dateTaken, orientation, data, width, height);
+            if (null != uri) {
+                boolean needThumbnail;
+                synchronized (this) {
+                    needThumbnail = (mQueue.size() <= 1);
+                }
+                if (needThumbnail) {
+                    int ratio = (int) Math.ceil((double) width / previewWidth);
+                    int inSampleSize = Integer.highestOneBit(ratio);
+                    Thumbnail t = Thumbnail.createThumbnail(data, orientation, inSampleSize, uri);
+                    synchronized (mUpdateThumbnailLock) {
+                        mPendingThumbnail = t;
+                        mHandler.sendEmptyMessage(UPDATE_THUMBNAIL);
+                    }
+                }
+            }
+            Util.broadcastNewPicture(MainActivity.this, uri);
+
+        }
+    }
+
+    private static class SaveRequest {
+        byte[] data;
+        int width, height;
+        long dateTaken;
+        int previewWidth;
     }
 
 }

@@ -127,6 +127,19 @@
                 android:layout_height="match_parent"
                 />
 
+            <!-- record time -->
+            <Chronometer
+                android:id="@+id/chronometer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left|top"
+                android:format="@string/rec_time"
+                android:textColor="@android:color/holo_red_light"
+                android:textSize="20sp"
+                android:visibility="gone"/>
+
+            <include layout="@layout/viewfinder_labels_video" android:id="@+id/labels" />
+
         </FrameLayout>
 
 

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="hint_y_offset">64dp</dimen>
+    <dimen name="indicator_bar_width">13dp</dimen>
+</resources>
