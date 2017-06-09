@@ -36,11 +36,11 @@ public class SurfaceEncoder extends Encoder {
 	private static final boolean DEBUG = true;	// set false when releasing
 	private static final String TAG = "SurfaceEncoder";
 
-	private static final String MIME_TYPE = "video/avc";
+	private static final String MIME_TYPE = "video/mp4";
 	private static final int IFRAME_INTERVAL = 10;
-	private static final int FRAME_WIDTH = 640;
-	private static final int FRAME_HEIGHT = 480;
-	private static final int CAPTURE_FPS = 15;
+	public static final int FRAME_WIDTH = 640;
+	public static final int FRAME_HEIGHT = 480;
+	public static final int CAPTURE_FPS = 15;
 	private static final int BIT_RATE = 1000000;
 
 	protected Surface mInputSurface;

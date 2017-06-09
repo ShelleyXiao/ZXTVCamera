@@ -23,15 +23,14 @@
 
 package com.serenegiant.encoder;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
-import android.annotation.TargetApi;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaFormat;
 import android.util.Log;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * This class receives video images as ByteBuffer(strongly recommend direct ByteBuffer) as NV21(YUV420SP)
@@ -44,7 +43,7 @@ public class MediaVideoBufferEncoder extends MediaEncoder implements IVideoEncod
 	private static final boolean DEBUG = true;	// TODO set false on release
 	private static final String TAG = "MediaVideoBufferEncoder";
 
-	private static final String MIME_TYPE = "video/avc";
+	private static final String MIME_TYPE = "video/mp4";
 	// parameters for recording
     private static final int FRAME_RATE = 15;
     private static final float BPP = 0.50f;

@@ -25,6 +25,8 @@ import android.provider.MediaStore.Images;
 import android.provider.MediaStore.Images.ImageColumns;
 import android.util.Log;
 
+import com.zx.tv.camera.utils.Logger;
+
 import java.io.File;
 import java.io.FileOutputStream;
 
@@ -34,7 +36,7 @@ public class Storage {
     public static final String DCIM =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
 
-    public static final String DIRECTORY = DCIM + "/Camera";
+    public static final String DIRECTORY = DCIM + "/UsbCamera";
 
     // Match the code in MediaProvider.computeBucketValues().
     public static final String BUCKET_ID =
@@ -112,17 +114,23 @@ public class Storage {
         }
 
         File dir = new File(DIRECTORY);
-        dir.mkdirs();
-        if (!dir.isDirectory() || !dir.canWrite()) {
-            return UNAVAILABLE;
+        Logger.getLogger().d("DIRECTORY " + DIRECTORY
+                +" dir.canWrite() " + dir.canWrite() + " "
+                + dir.isDirectory());
+        if(!dir.exists()) {
+            dir.mkdirs();
+            if (!dir.isDirectory() || !dir.canWrite()) {
+                return UNAVAILABLE;
+            }
         }
-
+        Logger.getLogger().d("DIRECTORY ******dd********");
         try {
             StatFs stat = new StatFs(DIRECTORY);
             return stat.getAvailableBlocks() * (long) stat.getBlockSize();
         } catch (Exception e) {
             Log.i(TAG, "Fail to access external storage", e);
         }
+        Logger.getLogger().d("DIRECTORY **************");
         return UNKNOWN_SIZE;
     }
 

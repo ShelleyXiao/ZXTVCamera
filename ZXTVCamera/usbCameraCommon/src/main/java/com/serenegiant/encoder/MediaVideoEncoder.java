@@ -23,8 +23,6 @@
 
 package com.serenegiant.encoder;
 
-import java.io.IOException;
-
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
@@ -34,6 +32,8 @@ import android.view.Surface;
 
 import com.serenegiant.glutils.EGLBase;
 import com.serenegiant.glutils.RenderHandler;
+
+import java.io.IOException;
 
 /**
  * Encode texture images as H.264 video
@@ -45,7 +45,7 @@ public class MediaVideoEncoder extends MediaEncoder implements IVideoEncoder {
 	private static final boolean DEBUG = true;	// TODO set false on release
 	private static final String TAG = "MediaVideoEncoder";
 
-	private static final String MIME_TYPE = "video/avc";
+	private static final String MIME_TYPE = "video/mp4";
 	// parameters for recording
 	private final int mWidth, mHeight;
     private static final int FRAME_RATE = 15;

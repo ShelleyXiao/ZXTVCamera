@@ -5,7 +5,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
-import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,7 +30,6 @@ import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.UVCCamera;
-import com.serenegiant.usbcameracommon.AbstractUVCCameraHandler;
 import com.serenegiant.usbcameracommon.UVCCameraHandler;
 import com.serenegiant.widget.CameraViewInterface;
 import com.serenegiant.widget.UVCCameraTextureView;
@@ -45,6 +43,7 @@ import com.zx.tv.camera.video.Encoder;
 import com.zx.tv.camera.video.SurfaceEncoder;
 import com.zx.tv.camera.widget.ModePicker;
 import com.zx.tv.camera.widget.ShutterButton;
+import com.zx.tv.camera.widget.SimpleUVCCameraTextureView;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,7 +89,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     private LinearLayout mLargerCameraLayout;
     private UVCCameraHandler mUVCCameraHandlerLarger;
-    private UVCCameraTextureView mUVCCameraViewLarger;
+    private SimpleUVCCameraTextureView mUVCCameraViewLarger;
     private Surface mLargerPrSurface;
     private TextView tvCameraPromateR;
 
@@ -125,8 +124,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     private String mVideoFilename;
     private ParcelFileDescriptor mVideoFileDescriptor;
-
-    private CamcorderProfile mProfile;
 
     private String mCurrentVideoFilename;
     private Uri mCurrentVideoUri;
@@ -296,11 +293,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
         mLargerCameraLayout = (LinearLayout) findViewById(R.id.camera_layout_larger);
         mLargerCameraLayout.setOnClickListener(this);
-        mUVCCameraViewLarger = (UVCCameraTextureView) findViewById(R.id.camera_view_larger);
-//        mUVCCameraViewLarger.setSurfaceTextureListener(mSurfaceTextureListener);
+        mUVCCameraViewLarger = (SimpleUVCCameraTextureView) findViewById(R.id.camera_view_larger);
+        mUVCCameraViewLarger.setSurfaceTextureListener(mSurfaceTextureListener);
 //        mUVCCameraViewLarger.setAspectRatio(UVCCamera.DEFAULT_PREVIEW_WIDTH / UVCCamera.DEFAULT_PREVIEW_HEIGHT);
-        mUVCCameraHandlerLarger = UVCCameraHandler.createHandler(this, mUVCCameraViewLarger,
-                UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT);
+        mUVCCameraHandlerLarger = null;
+//        UVCCameraHandler.createHandler(this, mUVCCameraViewLarger,
+//                UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT);
 
         mModePicker = (ModePicker) findViewById(R.id.mode_picker);
         mModePicker.setOnModeChangeListener(this);
@@ -317,46 +315,46 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     }
 
     private void initCamera() {
-        mUVCCameraHandlerLarger.addCallback(new AbstractUVCCameraHandler.CameraCallback() {
-            @Override
-            public void onOpen() {
-                Logger.getLogger().d("camera onOpen");
-            }
-
-            @Override
-            public void onClose() {
-                Logger.getLogger().d("camera onClose");
-            }
-
-            @Override
-            public void onStartPreview() {
-                Logger.getLogger().d("camera onStartPreview");
-                mModePicker.setCurrentMode(mCurrrentMode);
-                mModePicker.setEnabled(true);
-                mModePicker.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onStopPreview() {
-                Logger.getLogger().d("camera onStopPreview");
-            }
-
-            @Override
-            public void onStartRecording() {
-                Logger.getLogger().d("camera onStartRecording");
-            }
-
-            @Override
-            public void onStopRecording() {
-                Logger.getLogger().d("camera onStopRecording");
-            }
-
-            @Override
-            public void onError(Exception e) {
-                Logger.getLogger().e("camera " + e);
-                Util.showError(MainActivity.this, R.string.cannot_connect_camera);
-            }
-        });
+//        mUVCCameraHandlerLarger.addCallback(new AbstractUVCCameraHandler.CameraCallback() {
+//            @Override
+//            public void onOpen() {
+//                Logger.getLogger().d("camera onOpen");
+//            }
+//
+//            @Override
+//            public void onClose() {
+//                Logger.getLogger().d("camera onClose");
+//            }
+//
+//            @Override
+//            public void onStartPreview() {
+//                Logger.getLogger().d("camera onStartPreview");
+//                mModePicker.setCurrentMode(mCurrrentMode);
+//                mModePicker.setEnabled(true);
+//                mModePicker.setVisibility(View.VISIBLE);
+//            }
+//
+//            @Override
+//            public void onStopPreview() {
+//                Logger.getLogger().d("camera onStopPreview");
+//            }
+//
+//            @Override
+//            public void onStartRecording() {
+//                Logger.getLogger().d("camera onStartRecording");
+//            }
+//
+//            @Override
+//            public void onStopRecording() {
+//                Logger.getLogger().d("camera onStopRecording");
+//            }
+//
+//            @Override
+//            public void onError(Exception e) {
+//                Logger.getLogger().e("camera " + e);
+//                Util.showError(MainActivity.this, R.string.cannot_connect_camera);
+//            }
+//        });
     }
 
     private final USBMonitor.OnDeviceConnectListener mOnDeviceConnectListener = new USBMonitor.OnDeviceConnectListener() {
@@ -546,7 +544,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         isLarger = false;
         mDualCameraView.setVisibility(View.VISIBLE);
         mLargerCameraLayout.setVisibility(View.GONE);
-        mUVCCameraHandlerLarger.close();
+//        mUVCCameraHandlerLarger.close();
 
         releaseLargerCamera();
 
@@ -619,7 +617,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
      */
     private final void startCapture() {
         if (mEncoder == null && (mCaptureState == CAPTURE_STOP)) {
-            mCaptureState = CAPTURE_PREPARE;
+            mCaptureState = CAPTURE_RUNNING;
             updateAndShowStorageHint();
             if (mStorageSpace < Storage.LOW_STORAGE_THRESHOLD) {
                 Logger.getLogger().e("Storage issue, ignore the start request");
@@ -646,7 +644,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 }
             }, 0);
 
-            mChronometer.setVisibility(View.VISIBLE);
 
             mRecordingStartTime = SystemClock.uptimeMillis();
             showRecordingUI(true);
@@ -690,7 +687,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 }
             }
         }, 0);
-        mChronometer.setVisibility(View.GONE);
         mCurrentVideoFilename = mVideoFilename;
         showRecordingUI(false);
         addVideoToMediaStore();
@@ -735,8 +731,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         mCurrentVideoValues.put(MediaStore.Video.Media.MIME_TYPE, mime);
         mCurrentVideoValues.put(MediaStore.Video.Media.DATA, mVideoFilename);
         mCurrentVideoValues.put(MediaStore.Video.Media.RESOLUTION,
-                Integer.toString(mProfile.videoFrameWidth) + "x" +
-                        Integer.toString(mProfile.videoFrameHeight));
+                Integer.toString(SurfaceEncoder.FRAME_WIDTH) + "x" +
+                        Integer.toString(SurfaceEncoder.FRAME_WIDTH));
         Logger.getLogger().v( "New video filename: " + mVideoFilename);
     }
 
@@ -829,6 +825,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     private void updateAndShowStorageHint() {
         mStorageSpace = Storage.getAvailableSpace();
+        Logger.getLogger().d("***************** mStorageSpace " + mStorageSpace);
         showStorageHint();
     }
 
@@ -928,8 +925,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     @Override
     public void onShutterButtonClick() {
         if(mCurrrentMode == ModePicker.MODE_VIDEO) {
-            boolean stop =  mCaptureState == CAPTURE_RUNNING;
-
+            boolean stop =  (mCaptureState == CAPTURE_RUNNING);
+            Logger.getLogger().d("********** stop = " + stop);
             if (stop) {
                 stopCapture();
             } else {
@@ -940,7 +937,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
             // Keep the shutter button disabled when in video capture intent
             // mode and recording is stopped. It'll be re-enabled when
             // re-take button is clicked.
-            if (stop) {
+            if (!stop) {
                 mHandler.sendEmptyMessageDelayed(
                         ENABLE_SHUTTER_BUTTON, SHUTTER_BUTTON_TIMEOUT);
             }
@@ -960,7 +957,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 case UPDATE_THUMBNAIL:
                     break;
                 case ENABLE_SHUTTER_BUTTON:
-
+                    mShutterButton.setEnabled(true);
                     break;
             }
         }
