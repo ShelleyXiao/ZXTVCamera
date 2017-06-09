@@ -62,7 +62,7 @@ public class ModePicker extends RelativeLayout implements View.OnClickListener {
     private boolean mSelectionEnabled;
 
 
-    private int mCurrentMode = 1;
+    private int mCurrentMode = 0;
     private Animation mFadeIn, mFadeOut;
 
     public ModePicker(Context context, AttributeSet attrs) {

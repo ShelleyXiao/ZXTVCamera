@@ -23,19 +23,19 @@
 
 package com.serenegiant.encoder;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.GregorianCalendar;
+import java.util.Locale;
 
 public class MediaMuxerWrapper {
 	private static final boolean DEBUG = true;	// TODO set false on release
@@ -52,16 +52,22 @@ public class MediaMuxerWrapper {
 
 	/**
 	 * Constructor
-	 * @param ext extension of output file
+	 * @param path path of output file
 	 * @throws IOException
 	 */
-	public MediaMuxerWrapper(String ext) throws IOException {
-		if (TextUtils.isEmpty(ext)) ext = ".mp4";
-		try {
+	public MediaMuxerWrapper(String path) throws IOException {
+		String ext = ".mp4";
+		if (TextUtils.isEmpty(path)) {
 			mOutputPath = getCaptureFile(Environment.DIRECTORY_MOVIES, ext).toString();
-		} catch (final NullPointerException e) {
-			throw new RuntimeException("This app has no permission of writing external storage");
+		} else {
+			mOutputPath = path;
 		}
+		if(DEBUG) Log.v(TAG, "new video path: " + path);
+//		try {
+//			mOutputPath = getCaptureFile(Environment.DIRECTORY_MOVIES, ext).toString();
+//		} catch (final NullPointerException e) {
+//			throw new RuntimeException("This app has no permission of writing external storage");
+//		}
 		mMediaMuxer = new MediaMuxer(mOutputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
 		mEncoderCount = mStatredCount = 0;
 		mIsStarted = false;

@@ -45,7 +45,7 @@ public class MediaVideoEncoder extends MediaEncoder implements IVideoEncoder {
 	private static final boolean DEBUG = true;	// TODO set false on release
 	private static final String TAG = "MediaVideoEncoder";
 
-	private static final String MIME_TYPE = "video/mp4";
+	private static final String MIME_TYPE = "video/avc";
 	// parameters for recording
 	private final int mWidth, mHeight;
     private static final int FRAME_RATE = 15;

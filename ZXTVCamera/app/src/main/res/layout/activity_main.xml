@@ -121,7 +121,7 @@
             android:layout_centerVertical="true"
             android:layout_weight="1">
 
-            <com.zx.tv.camera.widget.SimpleUVCCameraTextureView
+            <com.serenegiant.widget.UVCCameraTextureView
                 android:id="@+id/camera_view_larger"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

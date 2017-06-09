@@ -74,6 +74,7 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 		public void onStopPreview();
 		public void onStartRecording();
 		public void onStopRecording();
+        public void onCaptureFinish();
 		public void onError(final Exception e);
 	}
 
@@ -205,6 +206,11 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 		sendEmptyMessage(MSG_CAPTURE_START);
 	}
 
+	public void startRecording(String path) {
+		checkReleased();
+		sendMessage(obtainMessage(MSG_CAPTURE_START, path));
+	}
+
 	public void stopRecording() {
 		sendEmptyMessage(MSG_CAPTURE_STOP);
 	}
@@ -307,11 +313,11 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 		case MSG_PREVIEW_STOP:
 			thread.handleStopPreview();
 			break;
-		case MSG_CAPTURE_STILL:
+		case MSG_CAPTURE_STILL: // 拍照
 			thread.handleCaptureStill((String)msg.obj);
 			break;
-		case MSG_CAPTURE_START:
-			thread.handleStartRecording();
+		case MSG_CAPTURE_START: //录像
+			thread.handleStartRecording((String)msg.obj);
 			break;
 		case MSG_CAPTURE_STOP:
 			thread.handleStopRecording();
@@ -528,6 +534,7 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 					try {
 						bitmap.compress(Bitmap.CompressFormat.PNG, 100, os);
 						os.flush();
+                        callOnCaptureFinish();
 						mHandler.sendMessage(mHandler.obtainMessage(MSG_MEDIA_UPDATE, outputFile.getPath()));
 					} catch (final IOException e) {
 					}
@@ -539,11 +546,11 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 			}
 		}
 
-		public void handleStartRecording() {
+		public void handleStartRecording(String path) {
 			if (DEBUG) Log.v(TAG_THREAD, "handleStartRecording:");
 			try {
 				if ((mUVCCamera == null) || (mMuxer != null)) return;
-				final MediaMuxerWrapper muxer = new MediaMuxerWrapper(".mp4");	// if you record audio only, ".m4a" is also OK.
+				final MediaMuxerWrapper muxer = new MediaMuxerWrapper(path);	// if you record audio only, ".m4a" is also OK.
 				MediaVideoBufferEncoder videoEncoder = null;
 				switch (mEncoderType) {
 				case 1:	// for video capturing using MediaVideoEncoder
@@ -825,6 +832,17 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 			}
 		}
 
+		private void callOnCaptureFinish() {
+            for (final CameraCallback callback : mCallbacks) {
+                try {
+                    callback.onCaptureFinish();
+                } catch (final  Exception e) {
+                    mCallbacks.remove(callback);
+                    Log.w(TAG, e);
+                }
+            }
+        }
+
 		private void callOnError(final Exception e) {
 			for (final CameraCallback callback: mCallbacks) {
 				try {
@@ -835,5 +853,6 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 				}
 			}
 		}
+
 	}
 }
