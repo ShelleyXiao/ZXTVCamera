@@ -36,7 +36,7 @@ public class SurfaceEncoder extends Encoder {
 	private static final boolean DEBUG = true;	// set false when releasing
 	private static final String TAG = "SurfaceEncoder";
 
-	private static final String MIME_TYPE = "video/mp4";
+	private static final String MIME_TYPE = "video/avc";
 	private static final int IFRAME_INTERVAL = 10;
 	public static final int FRAME_WIDTH = 640;
 	public static final int FRAME_HEIGHT = 480;
@@ -85,6 +85,7 @@ public class SurfaceEncoder extends Encoder {
 
 		// create a MediaCodec encoder with specific configuration
 		mMediaCodec = MediaCodec.createEncoderByType(MIME_TYPE);
+		if (DEBUG) Log.i(TAG, "mMediaCodec: " + mMediaCodec.toString());
 		mMediaCodec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
 		// get Surface for input to encoder
 		mInputSurface = mMediaCodec.createInputSurface();	// API >= 18

@@ -32,7 +32,6 @@ import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.UVCCamera;
 import com.serenegiant.usbcameracommon.UVCCameraHandler;
 import com.serenegiant.widget.CameraViewInterface;
-import com.serenegiant.widget.UVCCameraTextureView;
 import com.zx.tv.camera.capture.Storage;
 import com.zx.tv.camera.capture.Thumbnail;
 import com.zx.tv.camera.utils.Exif;
@@ -57,9 +56,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         , CameraDialog.CameraDialogParent, ModePicker.OnModeChangeListener
         , ShutterButton.OnShutterButtonListener {
 
-    private static final int CAPTURE_STOP = 0;
-    private static final int CAPTURE_PREPARE = 1;
-    private static final int CAPTURE_RUNNING = 2;
+    private static final int RECRODING_STOP = 0;
+    private static final int RECRODING_PREPARE = 1;
+    private static final int RECRODING_RUNNING = 2;
 
     private static final int UPDATE_RECORD_TIME = 5;
     private static final int ENABLE_SHUTTER_BUTTON = 6;
@@ -245,10 +244,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
             } else if (mCurrrentMode == ModePicker.MODE_VIDEO) {
                 if (checkPermissionWriteExternalStorage()) {
-                    if (mCaptureState == CAPTURE_STOP) {
-                        startCapture();
+                    if (mCaptureState == RECRODING_STOP) {
+                        startRecroding();
                     } else {
-                        stopCapture();
+                        stopRecroding();
                     }
                 }
             }
@@ -606,7 +605,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
         @Override
         public void onSurfaceTextureUpdated(final SurfaceTexture surface) {
-            if (mEncoder != null && mCaptureState == CAPTURE_RUNNING) {
+            if (mEncoder != null && mCaptureState == t RECRODING_RUNNING){
                 mEncoder.frameAvailable();
             }
         }
@@ -615,9 +614,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     /**
      * start capturing
      */
-    private final void startCapture() {
-        if (mEncoder == null && (mCaptureState == CAPTURE_STOP)) {
-            mCaptureState = CAPTURE_RUNNING;
+    private final void startRecroding() {
+        if (mEncoder == null && (mCaptureState == RECRODING_STOP)) {
+            mCaptureState = t RECRODING_RUNNING;
             updateAndShowStorageHint();
             if (mStorageSpace < Storage.LOW_STORAGE_THRESHOLD) {
                 Logger.getLogger().e("Storage issue, ignore the start request");
@@ -637,7 +636,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                             mEncoder.prepare();
                             mEncoder.startRecording();
                         } catch (final IOException e) {
-                            mCaptureState = CAPTURE_STOP;
+                            mCaptureState = RECRODING_STOP;
                         }
                     } else
                         throw new RuntimeException("Failed to start capture.");
@@ -650,6 +649,29 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
             updateRecordingTime();
         }
+    }
+
+    /**
+     * stop capture if capturing
+     */
+    private final void stopRecroding() {
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (mSync) {
+                    if (mUVCCamera != null) {
+                        mUVCCamera.stopCapture();
+                    }
+                }
+                if (mEncoder != null) {
+                    mEncoder.stopRecording();
+                    mEncoder = null;
+                }
+            }
+        }, 0);
+        mCurrentVideoFilename = mVideoFilename;
+        showRecordingUI(false);
+        addVideoToMediaStore();
     }
 
     private void releaseLargerCamera() {
@@ -670,29 +692,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     }
 
     /**
-     * stop capture if capturing
-     */
-    private final void stopCapture() {
-        queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (mSync) {
-                    if (mUVCCamera != null) {
-                        mUVCCamera.stopCapture();
-                    }
-                }
-                if (mEncoder != null) {
-                    mEncoder.stopRecording();
-                    mEncoder = null;
-                }
-            }
-        }, 0);
-        mCurrentVideoFilename = mVideoFilename;
-        showRecordingUI(false);
-        addVideoToMediaStore();
-    }
-
-    /**
      * callbackds from Encoder
      */
     private final Encoder.EncodeListener mEncodeListener = new Encoder.EncodeListener() {
@@ -703,7 +702,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                     mUVCCamera.startCapture(((SurfaceEncoder) encoder).getInputSurface());
                 }
             }
-            mCaptureState = CAPTURE_RUNNING;
+            mCaptureState = RECRODING_RUNNING;
         }
 
         @Override
@@ -713,7 +712,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                     mUVCCamera.stopCapture();
                 }
             }
-            mCaptureState = CAPTURE_STOP;
+            mCaptureState = RECRODING_STOP;
         }
     };
 
@@ -728,12 +727,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         mCurrentVideoValues.put(MediaStore.Video.Media.TITLE, title);
         mCurrentVideoValues.put(MediaStore.Video.Media.DISPLAY_NAME, filename);
         mCurrentVideoValues.put(MediaStore.Video.Media.DATE_TAKEN, dateTaken);
-        mCurrentVideoValues.put(MediaStore.Video.Media.MIME_TYPE, mime);
+        mCurrentVideoValues.put(MediaStore.Video.Media.MIME_TYPE, "video/avc");
         mCurrentVideoValues.put(MediaStore.Video.Media.DATA, mVideoFilename);
         mCurrentVideoValues.put(MediaStore.Video.Media.RESOLUTION,
                 Integer.toString(SurfaceEncoder.FRAME_WIDTH) + "x" +
                         Integer.toString(SurfaceEncoder.FRAME_WIDTH));
-        Logger.getLogger().v( "New video filename: " + mVideoFilename);
+        Logger.getLogger().v("New video filename: " + mVideoFilename);
     }
 
     private String createName(long dateTaken) {
@@ -749,7 +748,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
             try {
                 mVideoFileDescriptor.close();
             } catch (IOException e) {
-                Logger.getLogger().e( "Fail to close fd" + e);
+                Logger.getLogger().e("Fail to close fd" + e);
             }
             mVideoFileDescriptor = null;
         }
@@ -875,7 +874,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     }
 
     private void updateRecordingTime() {
-        if (mCaptureState != CAPTURE_RUNNING) {
+        if (mCaptureState != RECRODING_RUNNING) {
             return;
         }
         long now = SystemClock.uptimeMillis();
@@ -924,13 +923,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     @Override
     public void onShutterButtonClick() {
-        if(mCurrrentMode == ModePicker.MODE_VIDEO) {
-            boolean stop =  (mCaptureState == CAPTURE_RUNNING);
+        if (mCurrrentMode == ModePicker.MODE_VIDEO) {
+            boolean stop = (mCaptureState == t RECRODING_RUNNING);
             Logger.getLogger().d("********** stop = " + stop);
             if (stop) {
-                stopCapture();
+                stopRecroding();
             } else {
-                startCapture();
+                startRecroding();
             }
             mShutterButton.setEnabled(false);
 
