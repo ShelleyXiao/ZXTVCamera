@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/rootLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#ff000000">
+
+
+
+    <FrameLayout
+        android:id="@+id/picGalley"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+        <com.zx.tv.camera.gallery.PicGallery
+            android:id="@+id/pic_gallery"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:spacing="5dip"/>
+    </FrameLayout>
+
+    <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:layout_gravity="top"
+        >
+
+        <TextView
+            android:id="@+id/counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:text="@string/counter_init"
+            android:textColor="@color/BEIGE"
+            />
+
+
+
+    </RelativeLayout>
+
+</FrameLayout>

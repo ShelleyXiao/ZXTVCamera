@@ -56,4 +56,18 @@
         <item name="android:background">@drawable/bg_text_on_preview</item>
     </style>
 
+    <style name="dialogWindowAnim">
+        <item name="android:windowEnterAnimation">@anim/dialog_enter_anim</item>
+        <item name="android:windowExitAnimation">@anim/dialog_exit_anim</item>
+    </style>
+
+    <style name="DownTransparent">
+        <item name="android:windowBackground">@drawable/tran</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@style/dialogWindowAnim</item>
+
+    </style>
+
 </resources>

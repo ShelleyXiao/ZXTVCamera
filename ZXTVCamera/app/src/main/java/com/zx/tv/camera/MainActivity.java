@@ -20,6 +20,7 @@ import android.view.KeyEvent;
 import android.view.Surface;
 import android.view.View;
 import android.widget.Chronometer;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -32,8 +33,13 @@ import com.serenegiant.usb.UVCCamera;
 import com.serenegiant.usbcameracommon.AbstractUVCCameraHandler;
 import com.serenegiant.usbcameracommon.UVCCameraHandler;
 import com.serenegiant.widget.CameraViewInterface;
+import com.zx.album.Album;
 import com.zx.tv.camera.capture.Storage;
 import com.zx.tv.camera.capture.Thumbnail;
+import com.zx.tv.camera.gallery.FileInfo;
+import com.zx.tv.camera.gallery.FileInfoManager;
+import com.zx.tv.camera.gallery.FileLoader;
+import com.zx.tv.camera.gallery.ThumbnailHelper;
 import com.zx.tv.camera.utils.Exif;
 import com.zx.tv.camera.utils.Logger;
 import com.zx.tv.camera.utils.OnScreenHint;
@@ -41,7 +47,7 @@ import com.zx.tv.camera.utils.Util;
 import com.zx.tv.camera.video.Encoder;
 import com.zx.tv.camera.video.SurfaceEncoder;
 import com.zx.tv.camera.widget.ModePicker;
-import com.zx.tv.camera.widget.ShutterButton;
+import com.zx.tv.camera.widget.zxImageView;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,11 +57,15 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 
+import static android.R.attr.navigationBarColor;
+import static android.R.attr.statusBarColor;
 
 
 public class MainActivity extends BaseActivity implements View.OnClickListener
-        , CameraDialog.CameraDialogParent, ModePicker.OnModeChangeListener
-        , ShutterButton.OnShutterButtonListener {
+        , CameraDialog.CameraDialogParent {
+
+    public static final int MODE_CAMERA = 0;
+    public static final int MODE_VIDEO = 1;
 
     private static final int RECRODING_STOP = 0;
     private static final int RECRODING_PREPARE = 1;
@@ -68,6 +78,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     private static final long SHUTTER_BUTTON_TIMEOUT = 500L; // 500ms
 
     private static final float[] BANDWIDTH_FACTORS = {0.5F, 0.5F};
+
+    private static final int MAX_CONTINUE_PIC_NUM = 99;
+    private static final int THUMBNAIL_WIDTH = 100;
+    private static final int THUMBNAIL_HEIGHT = 100;
 
     private final Object mSync = new Object();
 
@@ -87,7 +101,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     private CameraViewInterface mUVCCameraViewL;
     private Surface mRightPrSurface;
 
-    private LinearLayout mLargerCameraLayout;
+    private View mLargerCameraLayout;
     private UVCCameraHandler mUVCCameraHandlerLarger;
     //    private SimpleUVCCameraTextureView mUVCCameraViewLarger;
     private CameraViewInterface mUVCCameraViewLarger;
@@ -99,7 +113,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     private ModePicker mModePicker;
     private Chronometer mChronometer;
-    private ShutterButton mShutterButton;
+//    private ShutterButton mShutterButton;
 
     private SparseArray<USBMonitor.UsbControlBlock> mUsbControlBlockSparseArray = new SparseArray<>();
 
@@ -111,7 +125,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     private boolean isLarger;
 
-    private int mCurrrentMode = ModePicker.MODE_CAMERA;
+    private int mCurrrentMode = MODE_CAMERA;
 
     /**************video*****************/
     // Default 0. If it is larger than 0, the camcorder is in time lapse mode.
@@ -136,6 +150,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     private int mCaptureState = 0;
 
 
+    //****************** 替换UI
+    private ImageButton mSwitchModeButton;
+    private ImageButton mShutterButton;
+    private zxImageView mGalleryButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -157,6 +176,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         }
         if (mUVCCameraViewR != null) {
             mUVCCameraViewR.onResume();
+        }
+        if(mUVCCameraViewLarger != null) {
+            mUVCCameraViewLarger.onResume();
         }
     }
 
@@ -217,46 +239,64 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.camera_layout_L) {
-            if (mUVCCameraHandlerL != null) {
-                if (!mUVCCameraHandlerL.isOpened()) {
-                    CameraDialog.showDialog(this);
-                } else {
-                    mUVCCameraHandlerL.close();
-                    openCaeralLarger(0);
 
-                }
-            }
-        } else if (v.getId() == R.id.camera_layout_R) {
-            if (mUVCCameraHandlerR != null) {
-                if (!mUVCCameraHandlerR.isOpened()) {
-                    CameraDialog.showDialog(this);
-                } else {
-                    mUVCCameraHandlerR.close();
-                    openCaeralLarger(1);
-                }
-            }
-        } else if (v.getId() == R.id.camera_layout_larger) {
-//                if (mUVCCameraHandlerLarger != null) {
-//                    if (!mUVCCameraHandlerLarger.isOpened()) {
-//                        CameraDialog.showDialog(this);
-//                    } else {
-//                        mUVCCameraHandlerLarger.close();
-//                    }
-//                }
-        } else if (v.getId() == R.id.shutter_button) {
-            if (mCurrrentMode == ModePicker.MODE_CAMERA) {
+        switch (v.getId()) {
 
-            } else if (mCurrrentMode == ModePicker.MODE_VIDEO) {
-                if (checkPermissionWriteExternalStorage()) {
-                    if (mCaptureState == RECRODING_STOP) {
-                        startRecroding();
+            case R.id.camera_layout_L:
+                if (mUVCCameraHandlerL != null) {
+                    if (!mUVCCameraHandlerL.isOpened()) {
+                        CameraDialog.showDialog(this);
                     } else {
-                        stopRecroding();
+                        mUVCCameraHandlerL.close();
+                        openCaeralLarger(0);
+
                     }
                 }
-            }
+                break;
+            case R.id.camera_layout_R:
+                if (mUVCCameraHandlerR != null) {
+                    if (!mUVCCameraHandlerR.isOpened()) {
+                        CameraDialog.showDialog(this);
+                    } else {
+                        mUVCCameraHandlerR.close();
+                        openCaeralLarger(1);
+                    }
+                }
+                break;
+
+            case R.id.imageButtonShutterMode:
+                if (mCaptureState == RECRODING_RUNNING) {
+                    return;
+                }
+                if (mCurrrentMode == MODE_CAMERA) {
+                    mCurrrentMode = MODE_VIDEO;
+                } else if (mCurrrentMode == MODE_VIDEO) {
+                    mCurrrentMode = MODE_CAMERA;
+                }
+                updateModeSwitchIcon();
+                break;
+
+            case R.id.imageButtonActionShutter:
+                onShutterButtonClick();
+                break;
+            case R.id.imageButtonGallery:
+                if (FileInfoManager.getFileInfoList(FileLoader.CameraPath).size() != 0) {
+//                    Intent intent = new Intent(this, GalleryMainActivity.class);
+//                    startActivityForResult(intent, 0);
+//                    Logger.getLogger().d("======== start GalleryMainActivity !!!!");
+
+                    Album.gallery(this)
+                            .requestCode(444) // Request code.
+                            .checkListPath(Storage.DIRECTORY)
+                            .currentPosition(0) // First display position image of the list.
+                            .checkFunction(false) // Anti-election function.
+                            .start();
+                } else {
+                    Toast.makeText(MainActivity.this, R.string.no_data, Toast.LENGTH_SHORT).show();
+                }
+                break;
         }
+
     }
 
 
@@ -272,7 +312,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     }
 
     private void initView() {
-//        findViewById(R.id.rootLayout).setOnClickListener(this);
 
         mDualCameraView = findViewById(R.id.dual_camera_view);
 
@@ -295,7 +334,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT);
         tvCameraPromateR = (TextView) findViewById(R.id.camera_open_promate_R);
 
-        mLargerCameraLayout = (LinearLayout) findViewById(R.id.camera_layout_larger);
+        mLargerCameraLayout = findViewById(R.id.camera_layout_larger);
         mLargerCameraLayout.setOnClickListener(this);
 //        mUVCCameraViewLarger = (SimpleUVCCameraTextureView) findViewById(R.id.camera_view_larger);
 //        mUVCCameraViewLarger.setSurfaceTextureListener(mSurfaceTextureListener);
@@ -305,14 +344,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         mUVCCameraHandlerLarger = UVCCameraHandler.createHandler(this, mUVCCameraViewLarger,
                 UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT);
 
-        mModePicker = (ModePicker) findViewById(R.id.mode_picker);
-        mModePicker.setOnModeChangeListener(this);
 
-        mChronometer = (Chronometer) findViewById(R.id.chronometer);
-        mChronometer.setVisibility(View.GONE);
-        mShutterButton = (ShutterButton) findViewById(R.id.shutter_button);
+        mGalleryButton = (zxImageView) findViewById(R.id.imageButtonGallery);
+        mGalleryButton.setOnClickListener(this);
+        mSwitchModeButton = (ImageButton) findViewById(R.id.imageButtonShutterMode);
+        mSwitchModeButton.setOnClickListener(this);
+        mShutterButton = (ImageButton) findViewById(R.id.imageButtonActionShutter);
+        mShutterButton.setOnClickListener(this);
         mShutterButton.setEnabled(false);
-
 
         mRecordingTimeView = (TextView) findViewById(R.id.recording_time);
         mTimeLapseLabel = findViewById(R.id.time_lapse_label);
@@ -334,9 +373,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
             @Override
             public void onStartPreview() {
                 Logger.getLogger().d("camera onStartPreview");
-                mModePicker.setCurrentMode(mCurrrentMode);
-                mModePicker.setEnabled(true);
-                mModePicker.setVisibility(View.VISIBLE);
+
             }
 
             @Override
@@ -481,6 +518,18 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         }
     }
 
+    public void updateModeSwitchIcon() {
+        Logger.getLogger().d("************* updateModeSwitchIcon " + mCurrrentMode);
+        if (mCurrrentMode == MODE_VIDEO) {
+            mSwitchModeButton.setImageResource(R.drawable.btn_mode_camera);
+            mShutterButton.setImageResource(R.drawable.btn_shutter_video);
+        } else if (mCurrrentMode == MODE_CAMERA) {
+            mSwitchModeButton.setImageResource(R.drawable.btn_mode_video);
+            mShutterButton.setImageResource(R.drawable.btn_shutter);
+        }
+    }
+
+
     /**
      * index = 0 ---> left
      * index = 1 ---> right
@@ -491,7 +540,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         mLargerCameraLayout.setVisibility(View.VISIBLE);
 
         mShutterButton.setBackgroundResource(R.drawable.btn_shutter_video);
-        mShutterButton.setOnShutterButtonListener(this);
+//        mShutterButton.setOnShutterButtonListener(this);
         mShutterButton.requestFocus();
 
         queueEvent(new Runnable() {
@@ -593,12 +642,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     }
 
-    @Override
-    public boolean onModeChanged(int newMode) {
-        return false;
-    }
-
-
     //**********************************************************************
 //    private final TextureView.SurfaceTextureListener mSurfaceTextureListener = new TextureView.SurfaceTextureListener() {
 //
@@ -631,7 +674,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
      * start capturing
      */
     private final void startRecroding() {
-        if (mCurrrentMode == ModePicker.MODE_VIDEO && mCaptureState == RECRODING_STOP) {
+        if (mCurrrentMode == MODE_VIDEO && mCaptureState == RECRODING_STOP) {
             mCaptureState = RECRODING_RUNNING;
             updateAndShowStorageHint();
             if (mStorageSpace < Storage.LOW_STORAGE_THRESHOLD) {
@@ -673,7 +716,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
      * stop capture if capturing
      */
     private final void stopRecroding() {
-        if (mCurrrentMode == ModePicker.MODE_VIDEO &&
+        if (mCurrrentMode == MODE_VIDEO &&
                 mCaptureState == RECRODING_RUNNING) {
 
             queueEvent(new Runnable() {
@@ -766,6 +809,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         String title = createName(dateTaken);
         String filenmae = title + ext;
         mImageFilename = Storage.DIRECTORY + '/' + filenmae;
+        mCurrentImageFilename = mImageFilename;
 
         mCurrentImageValues = new ContentValues(9);
         mCurrentImageValues.put(MediaStore.Images.ImageColumns.TITLE, title);
@@ -785,6 +829,36 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 getString(R.string.video_file_name_format));
 
         return dateFormat.format(date);
+    }
+
+    private void updateImageThumbnailView() {
+        String path = mCurrentImageFilename;
+        if (TextUtils.isEmpty(path)) {
+            return;
+        }
+
+        mHandler.removeMessages(UPDATE_THUMBNAIL);
+
+        ArrayList<FileInfo> f_list = FileInfoManager.getFileInfoList(Storage.DIRECTORY);
+        FileInfo f = null;
+        if ((f_list == null) || (f_list.size() <= 0)) {
+            mGalleryButton.setBackgroundResource(R.drawable.grey);
+            return;
+        }
+
+        f = f_list.get(0);
+
+        if (f == null) {
+            mGalleryButton.setBackgroundResource(R.drawable.grey);
+            return;
+        }
+
+        if (f.getMineType().equals("image/*"))
+            mGalleryButton.setImageBitmap(ThumbnailHelper.getImageThumbnail(f.getPath(), THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT));
+        else if (f.getMineType().equals("video/*"))
+            mGalleryButton.setImageBitmap(ThumbnailHelper.getVideoThumbnail(f.getPath(), THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, MediaStore.Images.Thumbnails.MICRO_KIND));
+        else
+            Logger.getLogger().e("error mRecentMediaType : " + f.getMineType());
     }
 
     private void closeVideoFileDescriptor() {
@@ -960,14 +1034,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 UPDATE_RECORD_TIME, actualNextUpdateDelay);
     }
 
-    @Override
-    public void onShutterButtonFocus(boolean pressed) {
-
-    }
-
-    @Override
     public void onShutterButtonClick() {
-        if (mCurrrentMode == ModePicker.MODE_VIDEO) {
+        if (mCurrrentMode == MODE_VIDEO) {
             boolean stop = (mCaptureState == RECRODING_RUNNING);
             if (stop) {
                 stopRecroding();
@@ -983,7 +1051,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 mHandler.sendEmptyMessageDelayed(
                         ENABLE_SHUTTER_BUTTON, SHUTTER_BUTTON_TIMEOUT);
             }
-        } else if(mCurrrentMode == ModePicker.MODE_CAMERA) {
+        } else if (mCurrrentMode == MODE_CAMERA) {
             updateAndShowStorageHint();
             if (mStorageSpace < Storage.LOW_STORAGE_THRESHOLD) {
                 Logger.getLogger().e("Storage issue, ignore the start request");
@@ -998,8 +1066,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                     final String path = mImageFilename;
                     if (!TextUtils.isEmpty(path)) {
                         mUVCCameraHandlerLarger.captureStill(path);
-                    } else
+                        mHandler.sendEmptyMessage(UPDATE_THUMBNAIL);
+                    } else {
                         throw new RuntimeException("Failed to start capture. vieopath is null");
+                    }
                 }
             }, 0);
 
@@ -1017,6 +1087,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                     updateRecordingTime();
                     break;
                 case UPDATE_THUMBNAIL:
+                    updateImageThumbnailView();
                     break;
                 case ENABLE_SHUTTER_BUTTON:
                     mShutterButton.setEnabled(true);

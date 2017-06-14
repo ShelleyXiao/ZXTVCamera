@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:layout_gravity="top"
+        >
+
+        <Button
+            android:id="@+id/back_to_gallery"
+            android:text="@string/back"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_alignParentLeft="true"
+            />
+
+        <TextView
+            android:id="@+id/counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_item"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            />
+
+    </RelativeLayout>
+
+
+    <FrameLayout
+        android:id="@+id/picGalleyContinues"
+        android:layout_below="@+id/topBar"
+        android:layout_above="@+id/botomBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <com.zx.tv.camera.gallery.PicGallery
+            android:id="@+id/pic_gallery_continues"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:spacing="5dip" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageView"
+            android:layout_gravity="center_horizontal|top" />
+    </FrameLayout>
+
+
+    <LinearLayout
+        android:id="@+id/botomBar"
+        android:layout_alignParentBottom="true"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/save_some"
+            android:text="@string/save_some"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            />
+
+        <Button
+            android:id="@+id/save_all"
+            android:text="@string/save_all"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            />
+
+    </LinearLayout>
+
+</RelativeLayout>

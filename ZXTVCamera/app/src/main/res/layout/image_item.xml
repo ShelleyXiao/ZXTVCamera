@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <com.zx.tv.camera.gallery.GalleryImageView
+        android:id="@+id/bitmap"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:spacing="5dip"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <ImageButton
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/playButton"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:background="@drawable/ic_control_play"
+        android:visibility="invisible"
+        android:layout_marginBottom="172dp" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/HDR_indication"
+        android:layout_alignTop="@id/bitmap"
+        android:layout_marginTop="10dp"
+        android:layout_alignRight="@id/bitmap"
+        android:background="@drawable/hdr_on_indicator"
+        android:visibility="invisible"/>
+
+    <ImageView
+        android:id="@+id/select_indicator"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_alignTop="@id/bitmap"
+        android:layout_marginTop="20dp"
+        android:layout_alignRight="@id/bitmap"
+        android:visibility="invisible"
+        android:background="@drawable/circle_grey"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/Continue_indication"
+        android:text="@string/continue_pics"
+        android:visibility="invisible"
+        android:layout_centerHorizontal="true"
+        android:layout_alignBottom="@id/bitmap"
+        android:layout_marginBottom="20dp"/>
+
+</RelativeLayout>

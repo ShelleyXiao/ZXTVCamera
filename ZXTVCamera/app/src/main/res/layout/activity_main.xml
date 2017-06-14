@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:zxcamera="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
@@ -106,7 +106,7 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/camera_layout_larger"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -147,6 +147,7 @@
             android:layout_width="260dp"
             android:layout_height="match_parent"
             android:background="@drawable/bg_camera_pattern"
+            android:visibility="gone"
             >
 
             <com.zx.tv.camera.widget.ShutterButton
@@ -162,6 +163,112 @@
             <include layout="@layout/mode_picker"/>
 
         </RelativeLayout>
-    </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="85dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_gravity="right"
+            android:id="@+id/linearLayoutRight"
+            android:weightSum="80.0">
+
+            <!--<RelativeLayout-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="0.0dp"-->
+                <!--android:layout_weight="20.0"-->
+                <!--android:visibility="gone">-->
+
+                <!--<ImageButton-->
+                    <!--android:layout_width="50dp"-->
+                    <!--android:layout_height="50dp"-->
+                    <!--android:background="#00000000"-->
+                    <!--android:id="@+id/imageButtonActionMenu"-->
+                    <!--android:layout_alignParentTop="true"-->
+                    <!--android:layout_centerHorizontal="true"-->
+                    <!--android:scaleType="fitCenter"-->
+                    <!--android:layout_marginTop="20dp"-->
+                    <!--tools:ignore="ContentDescription"-->
+                    <!--android:padding="8dp"-->
+                    <!--/>-->
+            <!--</RelativeLayout>-->
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0.0dp"
+                android:layout_weight="25.0">
+
+                <ImageButton
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/btn_mode_camera"
+                    android:background="#00000000"
+                    android:id="@+id/imageButtonShutterMode"
+                    android:scaleType="fitCenter"
+                    tools:ignore="ContentDescription"
+                    android:layout_centerInParent="true" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0.0dp"
+                android:layout_weight="30.0">
+
+                <ImageButton
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/btn_shutter"
+                    android:background="#00000000"
+                    android:id="@+id/imageButtonActionShutter"
+                    android:scaleType="fitCenter"
+                    tools:ignore="ContentDescription"
+                    android:layout_centerInParent="true" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0.0dp"
+                android:layout_weight="25.0">
+
+                <RelativeLayout
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:orientation="vertical"
+                    android:id="@+id/relativeLayoutGallery"
+                    android:layout_centerInParent="true"
+                    android:layout_margin="20dp"
+                    tools:ignore="UselessParent">
+
+                    <com.zx.tv.camera.widget.zxImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/imageButtonGallery"
+                        android:layout_centerInParent="true"
+                        android:scaleType="fitCenter"
+                        tools:ignore="ContentDescription"
+                        android:background="@drawable/btn_gallery_normal"/>
+
+                </RelativeLayout>
+
+            </RelativeLayout>
+
+            <!--<RelativeLayout-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="0.0dp"-->
+                <!--android:layout_weight="20.0">-->
+
+                <!--<ImageButton-->
+                    <!--android:layout_width="40dp"-->
+                    <!--android:layout_height="40dp"-->
+                    <!--android:background="#00000000"-->
+                    <!--android:id="@+id/imageButtonCalibration"-->
+                    <!--android:layout_centerInParent="true"-->
+                    <!--android:scaleType="fitCenter"-->
+                    <!--tools:ignore="ContentDescription"-->
+                    <!--android:visibility="invisible" />-->
+            <!--</RelativeLayout>-->
+
+        </LinearLayout>
+    </FrameLayout>
 
 </RelativeLayout>
