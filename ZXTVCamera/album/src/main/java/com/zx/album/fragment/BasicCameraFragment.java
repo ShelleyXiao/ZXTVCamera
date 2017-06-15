@@ -37,7 +37,7 @@ import java.util.Random;
  * <p>Fragment with camera function.</p>
  * Created by yanzhenjie on 17-3-29.
  */
-abstract class BasicCameraFragment extends NoFragment {
+public abstract class BasicCameraFragment extends NoFragment {
 
     private static final String INSTANCE_CAMERA_FILE_PATH = "INSTANCE_CAMERA_FILE_PATH";
 

@@ -14,6 +14,18 @@
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="stateAlwaysHidden|stateHidden"/>
 
+        <activity
+            android:name=".tv.AlbumActivityTV"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="stateAlwaysHidden|stateHidden"/>
+
+        <activity
+            android:name=".tv.GalleryActivityTv"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="stateAlwaysHidden|stateHidden"/>
+
         <provider
             android:name=".provider.CameraFileProvider"
             android:authorities="com.zx.album.camera.provider"

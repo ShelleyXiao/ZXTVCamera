@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zx.album;
+package com.zx.album.tv;
 
 import android.Manifest;
 import android.content.DialogInterface;
@@ -33,13 +33,16 @@ import android.view.WindowManager;
 import com.yanzhenjie.fragment.CompatActivity;
 import com.yanzhenjie.fragment.NoFragment;
 import com.yanzhenjie.mediascanner.MediaScanner;
-import com.zx.album.fragment.AlbumFragment;
+import com.zx.album.Album;
+import com.zx.album.AlbumWrapper;
+import com.zx.album.BasicWrapper;
+import com.zx.album.R;
+import com.zx.album.UIWrapper;
 import com.zx.album.fragment.CameraFragment;
 import com.zx.album.fragment.GalleryFragment;
 import com.zx.album.impl.AlbumCallback;
 import com.zx.album.impl.CameraCallback;
 import com.zx.album.impl.GalleryCallback;
-import com.zx.album.tv.GelleryMenuDailog;
 import com.zx.album.util.AlbumUtils;
 import com.zx.album.util.DisplayUtils;
 
@@ -56,7 +59,7 @@ import static com.zx.album.BasicWrapper.VALUE_INPUT_FRAMEWORK_FUNCTION_GALLERY;
  * Created by Yan Zhenjie on 2016/10/17.
  * Modify by ShaudXioa for ZhaoXin TV on 2017/06/12
  */
-public class AlbumActivity extends CompatActivity implements AlbumCallback, GalleryCallback, CameraCallback {
+public class AlbumActivityTV extends CompatActivity implements AlbumCallback, GalleryCallback, CameraCallback {
 
     private static final int PERMISSION_REQUEST_STORAGE_ALBUM = 200;
     private static final int PERMISSION_REQUEST_STORAGE_GALLERY = 201;
@@ -65,9 +68,6 @@ public class AlbumActivity extends CompatActivity implements AlbumCallback, Gall
     private String mCurrentImagepath;
     private Bundle mArgument;
     private int function;
-
-    private GelleryMenuDailog mGelleryMenuDailog;
-    private NoFragment mCurrentFragment;
 
     @Override
     protected int fragmentLayoutId() {
@@ -195,9 +195,8 @@ public class AlbumActivity extends CompatActivity implements AlbumCallback, Gall
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if(function == VALUE_INPUT_FRAMEWORK_FUNCTION_ALBUM) {
                         mArgument.putBoolean(AlbumWrapper.KEY_INPUT_ALLOW_CAMERA, false);
-                        AlbumFragment albumFragment = NoFragment.instantiate(this, AlbumFragment.class, mArgument);
+                        AlbumFragmentTV albumFragment = NoFragment.instantiate(this, AlbumFragmentTV.class, mArgument);
                         startFragment(albumFragment);
-                        mCurrentFragment = albumFragment;
                     }
 
                     function = VALUE_INPUT_FRAMEWORK_FUNCTION_ALBUM;
@@ -224,7 +223,6 @@ public class AlbumActivity extends CompatActivity implements AlbumCallback, Gall
                     galleryFragment.bindImagePaths(mCheckedPaths);
                     galleryFragment.bindImageFolderPath(mCurrentImagepath);
                     startFragment(galleryFragment);
-                    mCurrentFragment = galleryFragment;
                     function = VALUE_INPUT_FRAMEWORK_FUNCTION_GALLERY;
                 } else {
                     onAlbumResult(new ArrayList<>(mCheckedPaths));

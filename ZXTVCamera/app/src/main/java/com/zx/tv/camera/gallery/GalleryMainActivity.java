@@ -95,7 +95,7 @@ public class GalleryMainActivity extends AppCompatActivity implements
     }
 
     private final String GALLERY_PACKAGE_NAME = "com.android.gallery3d";
-    private final String GALLERY_ACTIVITY_CLASS = "com.android.gallery3d.app.GalleryActivity";
+    private final String GALLERY_ACTIVITY_CLASS = "com.android.gallery3d.app.GalleryActivityTv";
 
     @Override
     public void onDialogClick(View view) {

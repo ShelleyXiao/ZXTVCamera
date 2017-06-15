@@ -22,6 +22,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 
 import com.zx.album.task.LocalImageLoader;
+import com.zx.album.tv.AlbumTVWrapper;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -70,6 +71,10 @@ public final class Album {
      */
     public static AlbumWrapper album(Activity activity) {
         return new AlbumWrapper(activity);
+    }
+
+    public static AlbumTVWrapper albumTV(Activity activity) {
+        return new AlbumTVWrapper(activity);
     }
 
     /**
@@ -219,8 +224,8 @@ public final class Album {
             statusBarColor) {
         Intent intent = new Intent(activity, AlbumActivity.class);
         intent.putExtra(AlbumWrapper.KEY_INPUT_LIMIT_COUNT, limitCount);
-//        intent.putExtra(AlbumWrapper.KEY_INPUT_TOOLBAR_COLOR, toolbarColor);
-//        intent.putExtra(AlbumWrapper.KEY_INPUT_STATUS_COLOR, statusBarColor);
+        intent.putExtra(AlbumWrapper.KEY_INPUT_TOOLBAR_COLOR, toolbarColor);
+        intent.putExtra(AlbumWrapper.KEY_INPUT_STATUS_COLOR, statusBarColor);
         activity.startActivityForResult(intent, requestCode);
     }
 
@@ -276,9 +281,16 @@ public final class Album {
             statusBarColor) {
         Intent intent = new Intent(fragment.getContext(), AlbumActivity.class);
         intent.putExtra(AlbumWrapper.KEY_INPUT_LIMIT_COUNT, limitCount);
-//        intent.putExtra(AlbumWrapper.KEY_INPUT_TOOLBAR_COLOR, toolbarColor);
-//        intent.putExtra(AlbumWrapper.KEY_INPUT_STATUS_COLOR, statusBarColor);
+        intent.putExtra(AlbumWrapper.KEY_INPUT_TOOLBAR_COLOR, toolbarColor);
+        intent.putExtra(AlbumWrapper.KEY_INPUT_STATUS_COLOR, statusBarColor);
         fragment.startActivityForResult(intent, requestCode);
+    }
+
+    public static void startAlumbTV(Activity activity) {
+        Intent intent = new Intent(activity, AlbumActivity.class);
+        intent.putExtra(BasicWrapper.KEY_INPUT_FRAMEWORK_FUNCTION, BasicWrapper.VALUE_INPUT_FRAMEWORK_FUNCTION_ALBUM_TV);
+
+        activity.startActivity(intent);
     }
 
 }

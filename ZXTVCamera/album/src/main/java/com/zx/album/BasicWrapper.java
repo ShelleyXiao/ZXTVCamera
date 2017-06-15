@@ -31,10 +31,12 @@ public abstract class BasicWrapper<T extends BasicWrapper> {
 
     static final String KEY_INPUT_REQUEST_CODE = "KEY_INPUT_REQUEST_CODE";
 
-    static final String KEY_INPUT_FRAMEWORK_FUNCTION = "KEY_INPUT_FRAMEWORK_FUNCTION";
-    static final int VALUE_INPUT_FRAMEWORK_FUNCTION_ALBUM = 0;
-    static final int VALUE_INPUT_FRAMEWORK_FUNCTION_GALLERY = 1;
-    static final int VALUE_INPUT_FRAMEWORK_FUNCTION_CAMERA = 2;
+    public  static final String KEY_INPUT_FRAMEWORK_FUNCTION = "KEY_INPUT_FRAMEWORK_FUNCTION";
+    public  static final int VALUE_INPUT_FRAMEWORK_FUNCTION_ALBUM = 0;
+    public  static final int VALUE_INPUT_FRAMEWORK_FUNCTION_GALLERY = 1;
+    public  static final int VALUE_INPUT_FRAMEWORK_FUNCTION_CAMERA = 2;
+    public  static final int VALUE_INPUT_FRAMEWORK_FUNCTION_ALBUM_TV = 3;
+
 
     private Object o;
     private Intent intent;

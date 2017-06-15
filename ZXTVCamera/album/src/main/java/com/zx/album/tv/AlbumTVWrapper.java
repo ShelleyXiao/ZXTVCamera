@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zx.album;
+package com.zx.album.tv;
 
 import android.content.Intent;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+
+import com.zx.album.BasicWrapper;
+import com.zx.album.UIWrapper;
 
 import java.util.ArrayList;
 
@@ -25,7 +28,7 @@ import java.util.ArrayList;
  * <p>Album wrapper.</p>
  * Created by yanzhenjie on 17-3-29.
  */
-public class AlbumWrapper extends UIWrapper<AlbumWrapper> {
+public class AlbumTVWrapper extends UIWrapper<AlbumTVWrapper> {
 
     public static final String KEY_INPUT_TITLE = "KEY_INPUT_TITLE";
     public static final String KEY_INPUT_COLUMN_COUNT = "KEY_INPUT_COLUMN_COUNT";
@@ -36,41 +39,37 @@ public class AlbumWrapper extends UIWrapper<AlbumWrapper> {
 
     private Intent intent;
 
-    AlbumWrapper(Object o) {
-        this(o, new Intent(getContext(o), AlbumActivity.class), VALUE_INPUT_FRAMEWORK_FUNCTION_ALBUM);
+    public AlbumTVWrapper(Object o) {
+        this(o, new Intent(getContext(o), AlbumActivityTV.class), VALUE_INPUT_FRAMEWORK_FUNCTION_ALBUM);
     }
 
-    private AlbumWrapper(Object o, Intent intent, int function) {
+    private AlbumTVWrapper(Object o, Intent intent, int function) {
         super(o, intent, function);
         this.intent = intent;
     }
 
     @Override
-    public AlbumWrapper requestCode(int requestCode) {
-        intent.putExtra(KEY_INPUT_REQUEST_CODE, requestCode);
+    public AlbumTVWrapper requestCode(int requestCode) {
         return this;
     }
 
     @Override
-    public AlbumWrapper statusBarColor(@ColorInt int color) {
-        intent.putExtra(KEY_INPUT_STATUS_COLOR, color);
+    public AlbumTVWrapper statusBarColor(@ColorInt int color) {
         return this;
     }
 
     @Override
-    public AlbumWrapper toolBarColor(@ColorInt int color) {
-        intent.putExtra(KEY_INPUT_TOOLBAR_COLOR, color);
+    public AlbumTVWrapper toolBarColor(@ColorInt int color) {
         return this;
     }
 
     @Override
-    public AlbumWrapper navigationBarColor(@ColorInt int color) {
-//        intent.putExtra(KEY_INPUT_NAVIGATION_COLOR, color);
+    public AlbumTVWrapper navigationBarColor(@ColorInt int color) {
         return this;
     }
 
     @Override
-    public AlbumWrapper checkedList(@NonNull ArrayList<String> pathList) {
+    public AlbumTVWrapper checkedList(@NonNull ArrayList<String> pathList) {
         intent.putStringArrayListExtra(KEY_INPUT_CHECKED_LIST, pathList);
         return this;
     }
@@ -81,7 +80,7 @@ public class AlbumWrapper extends UIWrapper<AlbumWrapper> {
      * @param title string.
      * @return a subclass of {@link BasicWrapper}.
      */
-    public AlbumWrapper title(@NonNull String title) {
+    public AlbumTVWrapper title(@NonNull String title) {
         intent.putExtra(KEY_INPUT_TITLE, title);
         return this;
     }
@@ -90,9 +89,9 @@ public class AlbumWrapper extends UIWrapper<AlbumWrapper> {
      * Sets the number of column that the photo shows.
      *
      * @param count count.
-     * @return {@link AlbumWrapper}.
+     * @return {@link AlbumTVWrapper}.
      */
-    public AlbumWrapper columnCount(int count) {
+    public AlbumTVWrapper columnCount(int count) {
         intent.putExtra(KEY_INPUT_COLUMN_COUNT, count);
         return this;
     }
@@ -101,9 +100,9 @@ public class AlbumWrapper extends UIWrapper<AlbumWrapper> {
      * Set the number of photos to select.
      *
      * @param count count.
-     * @return {@link AlbumWrapper}.
+     * @return {@link AlbumTVWrapper}.
      */
-    public AlbumWrapper selectCount(int count) {
+    public AlbumTVWrapper selectCount(int count) {
         intent.putExtra(KEY_INPUT_LIMIT_COUNT, count);
         return this;
     }
@@ -112,10 +111,15 @@ public class AlbumWrapper extends UIWrapper<AlbumWrapper> {
      * Allow to take pictures.
      *
      * @param camera true, other wise false.
-     * @return {@link AlbumWrapper}.
+     * @return {@link AlbumTVWrapper}.
      */
-    public AlbumWrapper camera(boolean camera) {
+    public AlbumTVWrapper camera(boolean camera) {
         intent.putExtra(KEY_INPUT_ALLOW_CAMERA, camera);
+        return this;
+    }
+
+    public AlbumTVWrapper tvUI(boolean tv) {
+        intent.putExtra(KEY_INPUT_REQUEST_TV_UI, tv);
         return this;
     }
 

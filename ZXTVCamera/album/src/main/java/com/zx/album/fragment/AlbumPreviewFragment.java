@@ -18,10 +18,8 @@ package com.zx.album.fragment;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.AppCompatCheckBox;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -71,8 +69,8 @@ public class AlbumPreviewFragment extends NoFragment {
         mCheckBox = (AppCompatCheckBox) view.findViewById(R.id.cb_album_check);
         mViewPager = (ViewPager) view.findViewById(R.id.view_pager);
 
-        setToolbar((Toolbar) view.findViewById(R.id.toolbar));
-        displayHomeAsUpEnabled(R.drawable.album_ic_back_white);
+//        setToolbar((Toolbar) view.findViewById(R.id.toolbar));
+//        displayHomeAsUpEnabled(R.drawable.album_ic_back_white);
     }
 
     @Override
@@ -80,14 +78,14 @@ public class AlbumPreviewFragment extends NoFragment {
         super.onActivityCreated(savedInstanceState);
 
         Bundle argument = getArguments();
-        mToolBarColor = argument.getInt(
-                AlbumWrapper.KEY_INPUT_TOOLBAR_COLOR,
-                ContextCompat.getColor(getContext(), R.color.album_ColorPrimary));
+//        mToolBarColor = argument.getInt(
+//                AlbumWrapper.KEY_INPUT_TOOLBAR_COLOR,
+//                ContextCompat.getColor(getContext(), R.color.album_ColorPrimary));
         mAllowSelectCount = argument.getInt(AlbumWrapper.KEY_INPUT_LIMIT_COUNT, Integer.MAX_VALUE);
 
         // noinspection ConstantConditions
-        getToolbar().setBackgroundColor(mToolBarColor);
-        getToolbar().getBackground().mutate().setAlpha(120);
+//        getToolbar().setBackgroundColor(mToolBarColor);
+//        getToolbar().getBackground().mutate().setAlpha(120);
 
         initializeCheckBox();
         initializeViewPager();
@@ -164,15 +162,15 @@ public class AlbumPreviewFragment extends NoFragment {
      * @param count number.
      */
     private void setCheckedCountUI(int count) {
-        String finishStr = getString(R.string.album_menu_finish);
-        finishStr += "(" + count + " / " + mAllowSelectCount + ")";
-        mFinishMenuItem.setTitle(finishStr);
+//        String finishStr = getString(R.string.album_menu_finish);
+//        finishStr += "(" + count + " / " + mAllowSelectCount + ")";
+//        mFinishMenuItem.setTitle(finishStr);
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.album_menu_preview, menu);
-        mFinishMenuItem = menu.findItem(R.id.album_menu_finish);
+//        inflater.inflate(R.menu.album_menu_preview, menu);
+//        mFinishMenuItem = menu.findItem(R.id.album_menu_finish);
     }
 
     @Override

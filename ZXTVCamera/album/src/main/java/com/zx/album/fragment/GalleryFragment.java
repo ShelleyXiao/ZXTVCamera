@@ -20,12 +20,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.AppCompatCheckBox;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -39,7 +36,6 @@ import com.zx.album.GalleryWrapper;
 import com.zx.album.R;
 import com.zx.album.adapter.BasicPreviewAdapter;
 import com.zx.album.adapter.PathPreviewAdapter;
-import com.zx.album.entity.AlbumImage;
 import com.zx.album.impl.GalleryCallback;
 import com.zx.album.task.FileLoader;
 import com.zx.album.util.SelectorUtils;
@@ -51,7 +47,7 @@ import java.util.List;
  * <p>Gallery.</p>
  * Created by yanzhenjie on 17-3-29.
  */
-public class GalleryFragment extends NoFragment implements LoaderManager.LoaderCallbacks<List<AlbumImage>> {
+public class GalleryFragment extends NoFragment/* implements LoaderManager.LoaderCallbacks<List<AlbumImage>> */{
 
     private GalleryCallback mCallback;
 
@@ -129,7 +125,7 @@ public class GalleryFragment extends NoFragment implements LoaderManager.LoaderC
 
 //        setCheckedCountUI(getCheckCount());
 
-        getLoaderManager().initLoader(0, null, this);
+//        getLoaderManager().initLoader(0, null, this);
     }
 
     @Override
@@ -256,31 +252,31 @@ public class GalleryFragment extends NoFragment implements LoaderManager.LoaderC
         return true;
     }
 
-    @Override
-    public Loader<List<AlbumImage>> onCreateLoader(int id, Bundle args) {
-        mPicLoader = new FileLoader(getContext(), mCurrentImageFolderpath);
-        return mPicLoader;
-    }
-
-    @Override
-    public void onLoadFinished(Loader<List<AlbumImage>> loader, List<AlbumImage> data) {
-        mCheckedPaths.clear();
-        Log.d("debug", "************** size " + data.size());
-        ArrayList<String> list = new ArrayList<>();
-        for (AlbumImage info : data) {
-
-            list.add(info.getPath());
-        }
-//        if (mCheckedPaths.size() > 2)
-//            mViewPager.setOffscreenPageLimit(2);
-        bindImagePaths(list);
-
-        previewAdapter.notifyDataSetChanged();
-    }
-
-
-    @Override
-    public void onLoaderReset(Loader<List<AlbumImage>> loader) {
-
-    }
+//    @Override
+//    public Loader<List<AlbumImage>> onCreateLoader(int id, Bundle args) {
+//        mPicLoader = new FileLoader(getContext(), mCurrentImageFolderpath);
+//        return mPicLoader;
+//    }
+//
+//    @Override
+//    public void onLoadFinished(Loader<List<AlbumImage>> loader, List<AlbumImage> data) {
+//        mCheckedPaths.clear();
+//        Log.d("debug", "************** size " + data.size());
+//        ArrayList<String> list = new ArrayList<>();
+//        for (AlbumImage info : data) {
+//
+//            list.add(info.getPath());
+//        }
+////        if (mCheckedPaths.size() > 2)
+////            mViewPager.setOffscreenPageLimit(2);
+//        bindImagePaths(list);
+//
+//        previewAdapter.notifyDataSetChanged();
+//    }
+//
+//
+//    @Override
+//    public void onLoaderReset(Loader<List<AlbumImage>> loader) {
+//
+//    }
 }

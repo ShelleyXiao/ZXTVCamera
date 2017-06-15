@@ -28,7 +28,7 @@ import com.zx.tv.camera.R;
 public class MenuDailog extends DialogFragment implements  View.OnClickListener {
 
     private final String GALLERY_PACKAGE_NAME = "com.android.gallery3d";
-    private final String GALLERY_ACTIVITY_CLASS = "com.android.gallery3d.app.GalleryActivity";
+    private final String GALLERY_ACTIVITY_CLASS = "com.android.gallery3d.app.GalleryActivityTv";
 
     private String mFilename;
     private TextView tvFileName;

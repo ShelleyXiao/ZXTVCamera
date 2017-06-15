@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zx.album.adapter;
+package com.zx.album.tv;
 
 import android.content.Context;
 import android.support.v7.widget.AppCompatCheckBox;
@@ -126,7 +126,7 @@ public class AlbumImagebyCvAdapter extends RecyclerView.Adapter<AlbumImagebyCvAd
 
         public void setData(AlbumImage albumImage) {
 //            mCbChecked.setChecked(albumImage.isChecked());
-            Album.getAlbumConfig().getImageLoader().loadImage(mIvImage, albumImage.getPath(), 320, 540);
+            Album.getAlbumConfig().getImageLoader().loadImage(mIvImage, albumImage.getPath(), 240, 160);
         }
 
 

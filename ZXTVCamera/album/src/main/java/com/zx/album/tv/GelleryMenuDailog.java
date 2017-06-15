@@ -1,4 +1,4 @@
-package com.zx.album.fragment;
+package com.zx.album.tv;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -29,7 +29,7 @@ import com.zx.album.R;
 public class GelleryMenuDailog extends DialogFragment implements  View.OnClickListener {
 
     private final String GALLERY_PACKAGE_NAME = "com.android.gallery3d";
-    private final String GALLERY_ACTIVITY_CLASS = "com.android.gallery3d.app.GalleryActivity";
+    private final String GALLERY_ACTIVITY_CLASS = "com.android.gallery3d.app.GalleryActivityTv";
 
     private String mFilename;
     private TextView tvFileName;

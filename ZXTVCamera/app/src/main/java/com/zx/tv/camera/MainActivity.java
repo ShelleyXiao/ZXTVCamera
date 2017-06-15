@@ -33,7 +33,7 @@ import com.serenegiant.usb.UVCCamera;
 import com.serenegiant.usbcameracommon.AbstractUVCCameraHandler;
 import com.serenegiant.usbcameracommon.UVCCameraHandler;
 import com.serenegiant.widget.CameraViewInterface;
-import com.zx.album.Album;
+import com.zx.album.tv.GalleryActivityTv;
 import com.zx.tv.camera.capture.Storage;
 import com.zx.tv.camera.capture.Thumbnail;
 import com.zx.tv.camera.gallery.FileInfo;
@@ -56,9 +56,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
-
-import static android.R.attr.navigationBarColor;
-import static android.R.attr.statusBarColor;
 
 
 public class MainActivity extends BaseActivity implements View.OnClickListener
@@ -284,13 +281,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 //                    Intent intent = new Intent(this, GalleryMainActivity.class);
 //                    startActivityForResult(intent, 0);
 //                    Logger.getLogger().d("======== start GalleryMainActivity !!!!");
+//
+//                    Album.gallery(this)
+//                            .requestCode(444) // Request code.
+//                            .checkListPath(Storage.DIRECTORY)
+//                            .currentPosition(0) // First display position image of the list.
+//                            .checkFunction(false) // Anti-election function.
+//                            .start();
 
-                    Album.gallery(this)
-                            .requestCode(444) // Request code.
-                            .checkListPath(Storage.DIRECTORY)
-                            .currentPosition(0) // First display position image of the list.
-                            .checkFunction(false) // Anti-election function.
-                            .start();
+
+                    Intent intent = new Intent(this, GalleryActivityTv.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString(GalleryActivityTv.KEY_INPUT_CHECKED_LIST_PATH, Storage.DIRECTORY);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
                 } else {
                     Toast.makeText(MainActivity.this, R.string.no_data, Toast.LENGTH_SHORT).show();
                 }

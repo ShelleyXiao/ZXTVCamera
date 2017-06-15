@@ -27,6 +27,16 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:windowSoftInputMode="stateAlwaysHidden|stateHidden"/>
 
+        <activity
+            android:name="com.zx.album.tv.AlbumActivityTV"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:windowSoftInputMode="stateAlwaysHidden|stateHidden"/>
+
+        <activity
+            android:name="com.zx.album.tv.GalleryActivityTv"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:windowSoftInputMode="stateAlwaysHidden|stateHidden"/>
+
         <activity android:name=".gallery.GalleryMainActivity"></activity>
         <activity android:name=".gallery.ContinuePicsActivity"></activity>
     </application>
