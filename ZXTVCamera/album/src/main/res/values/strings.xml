@@ -15,23 +15,27 @@
     limitations under the License.
 -->
 <resources>
-    <string name="album_title_not_found_image">Not Found Image</string>
-    <string name="album_not_found_picture">Did not find the picture</string>
-    <string name="album_take_picture">Take Picture</string>
+    <string name="album_title_not_found_image">没有图片</string>
+    <string name="album_not_found_picture">没有找到图片，赶快拍一张吧！</string>
+    <string name="album_take_picture">拍照</string>
 
-    <string name="album_title">Image</string>
-    <string name="album_all_image">All Images</string>
-    <string name="album_check_limit">You can only select %1$d images</string>
-    <string name="album_check_limit_camera">You can only select %1$d images, anti-election after the operation.</string>
-    <string name="album_check_little">You have not choose photos.</string>
-    <string name="album_menu_finish">Finish</string>
-    <string name="album_check">Selected</string>
+    <string name="album_title">图片</string>
+    <string name="album_all_image">所有图片</string>
+    <string name="album_check_limit">您最多可以选择%1$d张图片</string>
+    <string name="album_check_limit_camera">您最多可以选择%1$d张图片，请删除1张后再拍照。</string>
+    <string name="album_check_little">你没有选择照片</string>
+    <string name="album_menu_finish">完成</string>
+    <string name="album_check">选择</string>
 
-    <string name="album_dialog_permission_failed">Access to failure</string>
-    <string name="album_permission_storage_failed_hint">Failed to get read photo album permissions, please authorize in the Settings before use.</string>
-    <string name="album_permission_camera_failed_hint">Failed to get camera permissions, please authorize in the Settings before use.</string>
-    <string name="album_dialog_sure">OK</string>
+    <string name="album_dialog_permission_failed">权限获取失败</string>
+    <string name="album_permission_storage_failed_hint">获取读取相册权限失败，请在设置中授权后再使用。</string>
+    <string name="album_permission_camera_failed_hint">获取相机权限失败，请在设置中授权后再使用。</string>
+    <string name="album_dialog_sure">好的</string>
 
-    <string name="local_gallery">Gallery</string>
-    <string name="delete">Delete</string>
+    <string name="local_gallery">相册</string>
+    <string name="delete">删除</string>
+    <string name="cancle">否</string>
+    <string name="confirm">是</string>
+    <string name="delete_title">删除</string>
+    <string name="delete_message">是否删除这张相片</string>
 </resources>

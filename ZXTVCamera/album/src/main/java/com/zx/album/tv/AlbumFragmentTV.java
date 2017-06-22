@@ -16,6 +16,7 @@
 package com.zx.album.tv;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -51,6 +52,7 @@ import com.zx.album.impl.AlbumCallback;
 import com.zx.album.impl.OnCompatItemClickListener;
 import com.zx.album.impl.OnCompoundItemCheckListener;
 import com.zx.album.task.ScanTask;
+import com.zx.album.util.FileHelper;
 import com.zx.album.widget.recyclerview.TvRecyclerView;
 
 import java.io.File;
@@ -202,10 +204,17 @@ public class AlbumFragmentTV extends BasicCameraFragment {
         mAlbumContentAdapter.setItemClickListener(new OnCompatItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                List<AlbumImage> albumImages = mAlbumFolders.get(mCurrentFolderPosition).getImages();
-                AlbumPreviewFragment previewFragment = NoFragment.instantiate(getContext(), AlbumPreviewFragment.class, argument);
-                previewFragment.bindAlbumImages(albumImages, mCheckedImages, position);
-                startFragmentForResquest(previewFragment, REQUEST_CODE_FRAGMENT_PREVIEW);
+//                List<AlbumImage> albumImages = mAlbumFolders.get(mCurrentFolderPosition).getImages();
+//                AlbumPreviewFragment previewFragment = NoFragment.instantiate(getContext(), AlbumPreviewFragment.class, argument);
+//                previewFragment.bindAlbumImages(albumImages, mCheckedImages, position);
+//                startFragmentForResquest(previewFragment, REQUEST_CODE_FRAGMENT_PREVIEW);
+
+                Intent intent = new Intent(getActivity(), GalleryActivityTv.class);
+                Bundle bundle = new Bundle();
+                bundle.putString(GalleryActivityTv.KEY_INPUT_CHECKED_LIST_PATH, FileHelper.DIRECTORY);
+                bundle.putInt(GalleryActivityTv.KEY_INPUT_SELECT_INDEX, position);
+                intent.putExtras(bundle);
+                startActivity(intent);
             }
         });
         mRvContentList.setAdapter(mAlbumContentAdapter);

@@ -87,7 +87,7 @@ public class AlbumPreviewFragment extends NoFragment {
 //        getToolbar().setBackgroundColor(mToolBarColor);
 //        getToolbar().getBackground().mutate().setAlpha(120);
 
-        initializeCheckBox();
+//        initializeCheckBox();
         initializeViewPager();
 
         setCheckedCountUI(mCheckedImages.size());
@@ -147,7 +147,7 @@ public class AlbumPreviewFragment extends NoFragment {
                 AlbumImage albumImage = mAlbumImages.get(mCurrentItemPosition);
                 mCheckBox.setChecked(albumImage.isChecked());
                 // noinspection ConstantConditions
-                getToolbar().setTitle(mCurrentItemPosition + 1 + " / " + mAlbumImages.size());
+//                getToolbar().setTitle(mCurrentItemPosition + 1 + " / " + mAlbumImages.size());
             }
         };
         mViewPager.addOnPageChangeListener(pageChangeListener);

@@ -1,8 +1,10 @@
 package com.zx.album.tv;
 
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.LoaderManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.os.Bundle;
@@ -40,6 +42,7 @@ import java.util.List;
 public class GalleryActivityTv extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<AlbumImage>>
         , GelleryMenuDailog.OnDialogListener {
     public static final String KEY_INPUT_CHECKED_LIST_PATH = "KEY_INPUT_CHECKED_LIST_PATH";
+    public static final String KEY_INPUT_SELECT_INDEX = "KEY_INPUT_SELECT_INDEX";
 
     private View mCheckParent;
 
@@ -56,6 +59,7 @@ public class GalleryActivityTv extends AppCompatActivity implements LoaderManage
     private TextView tvFileCounter;
 
     private GelleryMenuDailog mGelleryMenuDailog;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -82,6 +86,7 @@ public class GalleryActivityTv extends AppCompatActivity implements LoaderManage
 
 
         String filePath = argument.getString(KEY_INPUT_CHECKED_LIST_PATH);
+        mCurrentItemPosition = argument.getInt(KEY_INPUT_SELECT_INDEX);
         bindImageFolderPath(filePath);
         initializeViewPager();
 
@@ -135,10 +140,39 @@ public class GalleryActivityTv extends AppCompatActivity implements LoaderManage
         if (view.getId() == R.id.gotoGallery) {
             Album.albumTV(this).start();
         } else if (view.getId() == R.id.pic_delete) {
-
+            deleteItem();
         }
     }
 
+    private void deleteItem() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.delete_title)
+                .setMessage(R.string.delete_message)
+                .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ((PathPreviewAdapter)previewAdapter).deleteItem(mCurrentItemPosition);
+
+                        updateCounter(mCurrentItemPosition);
+                    }
+                })
+                .setNegativeButton(R.string.cancle, null)
+                .show();
+    }
+
+    public void updateCounter(int pos) {
+        int rank;
+        if ((pos + 1) <= previewAdapter.getCount())
+            rank = pos + 1;
+        else
+            rank = previewAdapter.getCount();
+        String s = String.format("%d/%d", rank, previewAdapter.getCount());
+        tvFileCounter.setText(s);
+        mCurrentItemPosition = pos;
+        // after delete the last file, just turn back to camera
+        if (previewAdapter.getCount() == 0)
+            this.finish();
+    }
 
     /**
      * Bind the preview picture collection.

@@ -15,6 +15,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.Surface;
@@ -26,6 +27,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nostra13.universalimageloader.utils.L;
 import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
 import com.serenegiant.usb.USBMonitor;
@@ -107,6 +109,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     private USBMonitor.UsbControlBlock mUsbControlBlockL;
     private USBMonitor.UsbControlBlock mUsbControlBlockR;
+    private USBMonitor.UsbControlBlock mUsbControlBlockLarger;
 
     private ModePicker mModePicker;
     private Chronometer mChronometer;
@@ -120,7 +123,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     private final Handler mHandler = new MainHandler();
 
-    private boolean isLarger;
+    private boolean isLeft = false;
+    private boolean isRight = false;
+    private boolean isLarger = false;
+
+    private boolean largerResume = false;
 
     private int mCurrrentMode = MODE_CAMERA;
 
@@ -167,20 +174,34 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     @Override
     protected void onStart() {
         super.onStart();
-        mUSBMonitor.register();
-        if (mUVCCameraViewL != null) {
-            mUVCCameraViewL.onResume();
-        }
-        if (mUVCCameraViewR != null) {
-            mUVCCameraViewR.onResume();
-        }
-        if(mUVCCameraViewLarger != null) {
-            mUVCCameraViewLarger.onResume();
-        }
+
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        Logger.getLogger().d("*************** onResume");
+
+        Logger.getLogger().i("**************** onStart isLarger " + isLarger);
+        mUSBMonitor.register();
+        if (isLarger) {
+            if (mUVCCameraViewLarger != null) {
+                mUVCCameraViewLarger.onResume();
+            }
+        } else {
+            if (mUVCCameraViewL != null) {
+                mUVCCameraViewL.onResume();
+            }
+            if (mUVCCameraViewR != null) {
+                mUVCCameraViewR.onResume();
+            }
+        }
+    }
+
+
+    @Override
     protected void onStop() {
+        Logger.getLogger().d("*************** onstop");
         mUVCCameraHandlerL.close();
         if (mUVCCameraViewL != null) {
             mUVCCameraViewL.onPause();
@@ -194,15 +215,16 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         mUVCCameraHandlerLarger.close();
         if (mUVCCameraHandlerLarger != null) {
             mUVCCameraViewLarger.onPause();
+            largerResume = true;
         }
 
-        if (mUsbControlBlockL != null) {
-            mUsbControlBlockL = null;
-        }
-
-        if (mUsbControlBlockR != null) {
-            mUsbControlBlockR = null;
-        }
+//        if (mUsbControlBlockL != null) {
+//            mUsbControlBlockL = null;
+//        }
+//
+//        if (mUsbControlBlockR != null) {
+//            mUsbControlBlockR = null;
+//        }
         mUSBMonitor.unregister();
 
         super.onStop();
@@ -219,6 +241,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
         if (mUVCCameraHandlerLarger != null) {
             mUVCCameraHandlerLarger = null;
+
         }
 
         if (mUSBMonitor != null) {
@@ -243,6 +266,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 if (mUVCCameraHandlerL != null) {
                     if (!mUVCCameraHandlerL.isOpened()) {
                         CameraDialog.showDialog(this);
+                        isLeft = true;
                     } else {
                         mUVCCameraHandlerL.close();
                         openCaeralLarger(0);
@@ -254,6 +278,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 if (mUVCCameraHandlerR != null) {
                     if (!mUVCCameraHandlerR.isOpened()) {
                         CameraDialog.showDialog(this);
+                        isRight = true;
                     } else {
                         mUVCCameraHandlerR.close();
                         openCaeralLarger(1);
@@ -282,17 +307,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 //                    startActivityForResult(intent, 0);
 //                    Logger.getLogger().d("======== start GalleryMainActivity !!!!");
 //
-//                    Album.gallery(this)
-//                            .requestCode(444) // Request code.
-//                            .checkListPath(Storage.DIRECTORY)
-//                            .currentPosition(0) // First display position image of the list.
-//                            .checkFunction(false) // Anti-election function.
-//                            .start();
-
 
                     Intent intent = new Intent(this, GalleryActivityTv.class);
                     Bundle bundle = new Bundle();
                     bundle.putString(GalleryActivityTv.KEY_INPUT_CHECKED_LIST_PATH, Storage.DIRECTORY);
+                    bundle.putInt(GalleryActivityTv.KEY_INPUT_SELECT_INDEX, 0);
                     intent.putExtras(bundle);
                     startActivity(intent);
                 } else {
@@ -360,6 +379,31 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         mRecordingTimeView = (TextView) findViewById(R.id.recording_time);
         mTimeLapseLabel = findViewById(R.id.time_lapse_label);
         mLabelsLinearLayout = (LinearLayout) findViewById(R.id.labels);
+
+        mUVCCameraViewLarger.setCallback(new CameraViewInterface.Callback() {
+            @Override
+            public void onSurfaceCreated(CameraViewInterface view, Surface surface) {
+                if (isLarger && largerResume) {
+                    if (mUsbControlBlockLarger != null) {
+                        mUVCCameraHandlerLarger.open(mUsbControlBlockLarger);
+                        final SurfaceTexture st = mUVCCameraViewLarger.getSurfaceTexture();
+                        mUVCCameraHandlerLarger.startPreview(new Surface(st));
+                    }
+                }
+            }
+
+            @Override
+            public void onSurfaceChanged(CameraViewInterface view, Surface surface, int width, int height) {
+
+            }
+
+            @Override
+            public void onSurfaceDestroy(CameraViewInterface view, Surface surface) {
+
+            }
+        });
+
+
     }
 
     private void initCamera() {
@@ -412,21 +456,37 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
 
     private final USBMonitor.OnDeviceConnectListener mOnDeviceConnectListener = new USBMonitor.OnDeviceConnectListener() {
         @Override
-        public void onAttach(UsbDevice device) {
+        public void onAttach(final UsbDevice device) {
             Logger.getLogger().d("onAttach: " + device);
-            Toast.makeText(MainActivity.this, device.getProductName() + getString(R.string.device_attach), Toast.LENGTH_SHORT).show();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this,
+                            (device.getProductName() != null) ? device.getProductName() : ""  + getString(R.string.device_attach),
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
+
         }
 
         @Override
-        public void onDettach(UsbDevice device) {
+        public void onDettach(final UsbDevice device) {
             Logger.getLogger().d("onDettach: " + device);
-            Toast.makeText(MainActivity.this, device.getProductName() + getString(R.string.device_dettach), Toast.LENGTH_SHORT).show();
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this,
+                            (device.getProductName() != null) ? device.getProductName() : ""  + getString(R.string.device_dettach),
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         @Override
         public void onConnect(UsbDevice device, USBMonitor.UsbControlBlock ctrlBlock, boolean createNew) {
             Logger.getLogger().d("onConnect: " + device);
-            if (!mUVCCameraHandlerL.isOpened()) {
+            if (isLeft == true && !mUVCCameraHandlerL.isOpened()) {
                 mUVCCameraHandlerL.open(ctrlBlock);
                 final SurfaceTexture st = mUVCCameraViewL.getSurfaceTexture();
                 mUVCCameraHandlerL.startPreview(new Surface(st));
@@ -438,8 +498,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                     }
                 });
                 isLarger = false;
+                isLeft = false;
                 mUsbControlBlockSparseArray.put(0, ctrlBlock);
-            } else if (!mUVCCameraHandlerR.isOpened()) {
+            } else if (isRight == true && !mUVCCameraHandlerR.isOpened()) {
                 mUVCCameraHandlerR.open(ctrlBlock);
                 final SurfaceTexture st = mUVCCameraViewR.getSurfaceTexture();
                 mUVCCameraHandlerR.startPreview(new Surface(st));
@@ -451,6 +512,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                     }
                 }, 0);
                 isLarger = false;
+                isRight = false;
                 mUsbControlBlockSparseArray.put(1, ctrlBlock);
             } else if (!mUVCCameraHandlerLarger.isOpened()) {
                 mUVCCameraHandlerLarger.open(ctrlBlock);
@@ -472,6 +534,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                             mLeftPrSurface.release();
                             mLeftPrSurface = null;
                         }
+                        isLeft = false;
                     }
                 }, 0);
             } else if ((mUVCCameraHandlerR != null) && !mUVCCameraHandlerR.isEqual(device)) {
@@ -483,6 +546,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                             mRightPrSurface.release();
                             mRightPrSurface = null;
                         }
+                        isRight = false;
                     }
                 }, 0);
             } else if ((mUVCCameraHandlerLarger != null) && !mUVCCameraHandlerLarger.isEqual(device)) {
@@ -518,7 +582,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     @Override
     public void onDialogResult(boolean canceled) {
         if (canceled) {
-
+            isLeft = false;
+            isRight = false;
         }
     }
 
@@ -543,17 +608,18 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         mDualCameraView.setVisibility(View.GONE);
         mLargerCameraLayout.setVisibility(View.VISIBLE);
 
-        mShutterButton.setBackgroundResource(R.drawable.btn_shutter_video);
+//        mShutterButton.setBackgroundResource(R.drawable.btn_shutter_video);
 //        mShutterButton.setOnShutterButtonListener(this);
         mShutterButton.requestFocus();
 
         queueEvent(new Runnable() {
             @Override
             public void run() {
-                USBMonitor.UsbControlBlock controlBlock = mUsbControlBlockSparseArray.get(index);
-                if (null != controlBlock) {
+//                USBMonitor.UsbControlBlock mUsbControlBlockLarger = mUsbControlBlockSparseArray.get(index);
+                mUsbControlBlockLarger = mUsbControlBlockSparseArray.get(index);
+                if (null != mUsbControlBlockLarger) {
                     if (!mUVCCameraHandlerLarger.isOpened()) {
-                        mUVCCameraHandlerLarger.open(controlBlock);
+                        mUVCCameraHandlerLarger.open(mUsbControlBlockLarger);
                         final SurfaceTexture st = mUVCCameraViewLarger.getSurfaceTexture();
                         mUVCCameraHandlerLarger.startPreview(new Surface(st));
                     }
@@ -612,9 +678,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
         isLarger = false;
         mDualCameraView.setVisibility(View.VISIBLE);
         mLargerCameraLayout.setVisibility(View.GONE);
-//        mUVCCameraHandlerLarger.close();
+        mUVCCameraHandlerLarger.close();
 
-        releaseLargerCamera();
+//        releaseLargerCamera();
 
         final USBMonitor.UsbControlBlock leftControlBlock = mUsbControlBlockSparseArray.get(0);
         if (null != leftControlBlock) {
@@ -630,7 +696,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
             }, 100);
         }
 
-        final USBMonitor.UsbControlBlock rightControlBlock = mUsbControlBlockSparseArray.get(0);
+        final USBMonitor.UsbControlBlock rightControlBlock = mUsbControlBlockSparseArray.get(1);
         if (null != rightControlBlock) {
             queueEvent(new Runnable() {
                 @Override
@@ -738,7 +804,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                     mUVCCameraHandlerLarger.stopRecording();
                 }
             }, 0);
-
+            mCaptureState = RECRODING_STOP;
             mCurrentVideoFilename = mVideoFilename;
             showRecordingUI(false);
             addVideoToMediaStore();
@@ -976,14 +1042,16 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
     }
 
     private void showRecordingUI(boolean recording) {
+        Logger.getLogger().i("******************showRecordingUI******" + recording);
         if (recording) {
 //            if (mThumbnailView != null) mThumbnailView.setEnabled(false);
-            mShutterButton.setBackgroundResource(R.drawable.btn_shutter_video_recording);
+            mShutterButton.setImageResource(R.drawable.btn_shutter_video_recording);
             mRecordingTimeView.setText("");
             mRecordingTimeView.setVisibility(View.VISIBLE);
         } else {
 //            if (mThumbnailView != null) mThumbnailView.setEnabled(true);
-            mShutterButton.setBackgroundResource(R.drawable.btn_shutter_video);
+            mShutterButton.setImageResource(R.drawable.btn_shutter_video);
+//            mShutterButton.setEnabled(true);
             mRecordingTimeView.setVisibility(View.GONE);
         }
     }
@@ -1038,7 +1106,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 UPDATE_RECORD_TIME, actualNextUpdateDelay);
     }
 
-    public void onShutterButtonClick() {
+    private void onShutterButtonClick() {
         if (mCurrrentMode == MODE_VIDEO) {
             boolean stop = (mCaptureState == RECRODING_RUNNING);
             if (stop) {
@@ -1047,14 +1115,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
                 startRecroding();
             }
             mShutterButton.setEnabled(false);
+            Logger.getLogger().i("*******onShutterButtonClick***********stop " + stop);
+            // 防止快速多次点击
+            if (stop) {
 
-            // Keep the shutter button disabled when in video capture intent
-            // mode and recording is stopped. It'll be re-enabled when
-            // re-take button is clicked.
-            if (!stop) {
-                mHandler.sendEmptyMessageDelayed(
-                        ENABLE_SHUTTER_BUTTON, SHUTTER_BUTTON_TIMEOUT);
             }
+            mHandler.sendEmptyMessageDelayed(
+                    ENABLE_SHUTTER_BUTTON, SHUTTER_BUTTON_TIMEOUT);
+
         } else if (mCurrrentMode == MODE_CAMERA) {
             updateAndShowStorageHint();
             if (mStorageSpace < Storage.LOW_STORAGE_THRESHOLD) {

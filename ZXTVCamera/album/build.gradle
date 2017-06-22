@@ -20,7 +20,7 @@ android {
         }
     }
 
-    resourcePrefix 'album_'
+//    resourcePrefix 'album_'
 }
 
 dependencies {

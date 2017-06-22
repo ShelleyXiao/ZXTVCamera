@@ -32,7 +32,7 @@ import java.util.List;
  */
 public abstract class BasicPreviewAdapter<T> extends PagerAdapter {
 
-    private List<T> mPreviewList;
+    protected List<T> mPreviewList;
 
     public BasicPreviewAdapter(List<T> previewList) {
         this.mPreviewList = previewList;

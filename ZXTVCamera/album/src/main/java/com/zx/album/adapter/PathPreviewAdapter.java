@@ -15,6 +15,10 @@
  */
 package com.zx.album.adapter;
 
+import android.util.Log;
+
+import com.zx.album.util.FileHelper;
+
 import java.util.List;
 
 /**
@@ -30,5 +34,27 @@ public class PathPreviewAdapter extends BasicPreviewAdapter<String> {
     @Override
     protected String getImagePath(String s) {
         return s;
+    }
+
+    public Boolean deleteItem(int position) {
+        Boolean res = false;
+
+        if (mPreviewList == null) {
+            Log.e("debug", "deleteItem error, mItems is null!!!");
+            return res;
+        }
+
+        if (position < 0 || position >= mPreviewList.size()) {
+            Log.e("debug", "deleteItem error, position is out of bounds!!!");
+            return res;
+        }
+
+        String item = mPreviewList.get(position);
+
+        res = FileHelper.deleteFile(item);
+
+        mPreviewList.remove(position);
+        notifyDataSetChanged();
+        return res;
     }
 }

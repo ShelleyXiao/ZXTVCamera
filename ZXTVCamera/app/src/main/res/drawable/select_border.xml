@@ -30,7 +30,7 @@
         android:color="@color/DEEPSKYBLUE" />
 
     <!-- <solid android:color="@color/TRANSPARENT" />　 -->
-    <solid android:color="@null" />
+    <!--<solid android:color="@null" />-->
 
     <padding
         android:bottom="2px"
