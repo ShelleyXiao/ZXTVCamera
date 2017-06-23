@@ -279,6 +279,8 @@ public class UVCCamera {
 		}
 		return result;
 	}
+
+
 	
 	/**
 	 * Set preview size and preview mode

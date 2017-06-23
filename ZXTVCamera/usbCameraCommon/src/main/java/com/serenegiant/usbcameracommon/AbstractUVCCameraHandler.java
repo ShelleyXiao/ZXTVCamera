@@ -47,6 +47,7 @@ import com.serenegiant.encoder.MediaSurfaceEncoder;
 import com.serenegiant.encoder.MediaVideoBufferEncoder;
 import com.serenegiant.encoder.MediaVideoEncoder;
 import com.serenegiant.usb.IFrameCallback;
+import com.serenegiant.usb.Size;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.UVCCamera;
 import com.serenegiant.widget.CameraViewInterface;
@@ -60,6 +61,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -455,6 +457,14 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 				callOnError(e);
 			}
 			if (DEBUG) Log.i(TAG, "supportedSize:" + (mUVCCamera != null ? mUVCCamera.getSupportedSize() : null));
+            List<Size> sizes = mUVCCamera.getSupportedSizeList();
+//            for(Size s : sizes)
+//                Log.e(TAG_THREAD, "********** size = " + s);
+            Log.i(TAG_THREAD, "mWidth = " + mWidth + " mHeight = " + mHeight);
+            Size largerSize = sizes.get(sizes.size() - 1);
+            Log.e(TAG_THREAD, "********** largerSize = " + largerSize);
+            mWidth = largerSize.width;
+            mHeight = largerSize.height;
 		}
 
 		public void handleClose() {
