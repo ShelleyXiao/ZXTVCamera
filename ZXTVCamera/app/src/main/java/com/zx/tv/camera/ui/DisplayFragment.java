@@ -69,6 +69,7 @@ public class DisplayFragment extends BaseFragment implements View.OnClickListene
     private CameraViewInterface mUVCCameraViewL;
     private TextView tvCameraPromateL;
 
+
     private RelativeLayout mRightCameraLayout;
     private UVCCameraHandler mUVCCameraHandlerR;
     private CameraViewInterface mUVCCameraViewR;
@@ -282,6 +283,9 @@ public class DisplayFragment extends BaseFragment implements View.OnClickListene
         L2_tvCameraPromateR = (TextView) rootView.findViewById(R.id.L2_camera_open_promate_R);
         L2_rightPreSize = new PrevSize();
 
+
+        mUVCCameraHandlerL.setCanAjustViewSize(true);// 自动去取合适分辨率
+        mUVCCameraHandlerR.setCanAjustViewSize(true);// 自动去取合适分辨率
         addSurfceCallback();
 
     }
@@ -290,6 +294,13 @@ public class DisplayFragment extends BaseFragment implements View.OnClickListene
         mUVCCameraViewL.setCallback(new CameraViewInterface.Callback() {
             @Override
             public void onSurfaceCreated(CameraViewInterface view, Surface surface, int width, int height) {
+
+                leftPrevSize.width = width;
+                leftPrevSize.height = height;
+                if(mUVCCameraHandlerL != null) {
+//                    mUVCCameraViewL.setAspectRatio(width / height);
+                    mUVCCameraHandlerL.setSize(width, height);
+                }
 
                 try {
                     final UsbDevice device = mDeviceList.get(0);
@@ -309,6 +320,9 @@ public class DisplayFragment extends BaseFragment implements View.OnClickListene
                 } catch (IndexOutOfBoundsException e) {
                     Logger.getLogger().i("index 0 device " + e.getMessage());
                 }
+
+
+                Logger.getLogger().i("width = " + width + "********** heigt = " + height);
             }
 
             @Override
@@ -521,28 +535,6 @@ public class DisplayFragment extends BaseFragment implements View.OnClickListene
             int index = integerIndex == null ? -1 : integerIndex;
             Logger.getLogger().d("****************onDisconnect: " + mDeviceConnectedMap.get(deviceKey));
             if ((mUVCCameraHandlerL != null) && 0 == index) {
-//                queueEvent(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        mUVCCameraHandlerL.close();
-//                        if (mLeftPrSurface != null) {
-//                            mLeftPrSurface.release();
-//                            mLeftPrSurface = null;
-//                        }
-//
-//                    }
-//                }, 0);
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        tvCameraPromateL.setVisibility(View.VISIBLE);
-//                        tvCameraPromateL.setText(R.string.device_open_error);
-//                    }
-//                });
-//
-//                mUsbDeviceName.delete(0);
-//                mDeviceConnected.remove(USBMonitor.getDeviceKey(device, true));
-//                mDeviceConnectedMap.remove(deviceKey);
 
                 disconnectDevice(device, mUVCCameraHandlerL, 1, tvCameraPromateL);
             } else if ((mUVCCameraHandlerR != null) && 1 == index) {

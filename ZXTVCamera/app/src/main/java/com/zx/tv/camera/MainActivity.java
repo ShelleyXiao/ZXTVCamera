@@ -416,6 +416,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener
             public void onSurfaceCreated(CameraViewInterface view, Surface surface, int width, int height) {
                 leftPrevSize.width = width;
                 leftPrevSize.height = height;
+
 //                if(mUVCCameraHandlerL == null) {
 //                    mUVCCameraHandlerL = UVCCameraHandler.createHandler(MainActivity.this, mUVCCameraViewL,
 //                            leftPrevSize.width, leftPrevSize.height);
