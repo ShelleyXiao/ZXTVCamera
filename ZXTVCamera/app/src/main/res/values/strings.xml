@@ -2,8 +2,12 @@
     <string name="app_name">ZXTVCamera</string>
 
     <string name="open_devices_promate">按"OK"键选择需要打开的设备</string>
-    <string name="device_attach">设备已链接</string>
+    <string name="device_attach">无名设备已链接</string>
     <string name="device_dettach">设备已断开</string>
+    <string name="device_open_error">设备打开失败</string>
+    <string name="device_conneted_warn">设备已被占用</string>
+
+    <string name="have_no_device">没有 USB camera 设备</string>
 
     <string name="image_file_name_format" translatable="false">"'IMG'_yyyyMMdd_HHmmss"</string>
     <string name="video_file_name_format" translatable="false">"'VID'_yyyyMMdd_HHmmss"</string>
@@ -45,5 +49,7 @@
     <string name="review_cancle">取消</string>
     <item name="seekbar_id" type="id" />
     <item name="seekbar_down" type="id" />
+
+
 
 </resources>

@@ -14,8 +14,9 @@ public class FileInfoManager {
     public static ArrayList<FileInfo> getFileInfoList(String dir) {
         ArrayList<FileInfo> fileInfoList = new ArrayList<FileInfo>();
         File directory = new File(dir);
-        if (!directory.exists())
-            return null;
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
 
         File[] files = directory.listFiles();
         // Consider the situation that has none initial data

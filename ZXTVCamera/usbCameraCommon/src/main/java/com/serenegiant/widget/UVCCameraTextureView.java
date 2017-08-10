@@ -110,7 +110,7 @@ public class UVCCameraTextureView extends AspectRatioTextureView    // API >= 14
         }
         mHasSurface = true;
         if (mCallback != null) {
-            mCallback.onSurfaceCreated(this, getSurface());
+            mCallback.onSurfaceCreated(this, getSurface(), width, height);
         }
     }
 

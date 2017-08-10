@@ -51,6 +51,8 @@ import android.util.SparseArray;
 import com.serenegiant.utils.BuildCheck;
 import com.serenegiant.utils.HandlerThreadHandler;
 
+import static android.R.attr.action;
+
 public final class USBMonitor {
 
 	private static final boolean DEBUG = false;	// TODO set false on production
@@ -330,7 +332,7 @@ public final class USBMonitor {
 		final List<UsbDevice> result = new ArrayList<UsbDevice>();
 		if (deviceList != null) {
 			for (final UsbDevice device: deviceList.values() ) {
-				Log.d("debug", "UsbDevice: " + device);
+//				Log.d("debug", "UsbDevice: " + device);
 				if ((filter == null) || (filter.matches(device) && !filter.isExclude)) {
 					result.add(device);
 				}
@@ -472,6 +474,7 @@ public final class USBMonitor {
 		@Override
 		public void onReceive(final Context context, final Intent intent) {
 			if (destroyed) return;
+
 			final String action = intent.getAction();
 			if (ACTION_USB_PERMISSION.equals(action)) {
 				// when received the result of requesting USB permission

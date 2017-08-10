@@ -61,6 +61,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -92,6 +93,7 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 
 	private final WeakReference<AbstractUVCCameraHandler.CameraThread> mWeakThread;
 	private volatile boolean mReleased;
+
 
 	protected AbstractUVCCameraHandler(final CameraThread thread) {
 		mWeakThread = new WeakReference<CameraThread>(thread);
@@ -126,6 +128,31 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 		final CameraThread thread = mWeakThread.get();
 		return (thread != null) && thread.isEqual(device);
 	}
+
+	public boolean isCanAjustViewSize() {
+        final CameraThread thread = mWeakThread.get();
+		return (thread != null) && thread.isCanAjustViewSize();
+	}
+
+	public boolean setCanAjustViewSize(boolean canAjustViewSize) {
+        final CameraThread thread = mWeakThread.get();
+        if(thread != null) {
+            thread.setCanAjustViewSize(canAjustViewSize);
+            return true;
+        }
+
+        return false;
+	}
+
+	public boolean setSize(int width, int height) {
+        final CameraThread thread = mWeakThread.get();
+        if(thread != null) {
+            thread.setSize(width, height);
+            return true;
+        }
+
+        return false;
+    }
 
 	protected boolean isCameraThread() {
 		final CameraThread thread = mWeakThread.get();
@@ -347,6 +374,8 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 		private float mBandwidthFactor;
 		private boolean mIsPreviewing;
 		private boolean mIsRecording;
+
+        private boolean canAjustViewSize;
 		/**
 		 * shutter sound
 		 */
@@ -439,7 +468,22 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 			}
 		}
 
-		public boolean isEqual(final UsbDevice device) {
+        public boolean isCanAjustViewSize() {
+            return canAjustViewSize;
+        }
+
+        public void setCanAjustViewSize(boolean canAjustViewSize) {
+            this.canAjustViewSize = canAjustViewSize;
+        }
+
+        public void setSize(int width, int height) {
+            if(canAjustViewSize) {
+                mWidth = width;
+                mHeight = height;
+            }
+        }
+
+        public boolean isEqual(final UsbDevice device) {
 			return (mUVCCamera != null) && (mUVCCamera.getDevice() != null) && mUVCCamera.getDevice().equals(device);
 		}
 
@@ -457,17 +501,66 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 				callOnError(e);
 			}
 			if (DEBUG) Log.i(TAG, "supportedSize:" + (mUVCCamera != null ? mUVCCamera.getSupportedSize() : null));
-            List<Size> sizes = mUVCCamera.getSupportedSizeList();
-//            for(Size s : sizes)
-//                Log.e(TAG_THREAD, "********** size = " + s);
-            Log.i(TAG_THREAD, "mWidth = " + mWidth + " mHeight = " + mHeight);
-            Size largerSize = sizes.get(sizes.size() - 1);
-            Log.e(TAG_THREAD, "********** largerSize = " + largerSize);
-            mWidth = largerSize.width;
-            mHeight = largerSize.height;
+
+            if(isCanAjustViewSize()) {
+                List<Size> sizes = mUVCCamera.getSupportedSizeList();
+                for(Size s : sizes) {
+                    Log.e(TAG_THREAD, "********** size = " + s);
+                    Log.e(TAG_THREAD, "************ rate size = " + getSurfaceViewSize(s.width, s.height));
+                }
+
+                String previwRatio = getSurfaceViewSize(mWidth, mHeight);
+                Log.e(TAG_THREAD, "*****previwRatio = " + previwRatio);
+                Log.i(TAG_THREAD, "mWidth = " + mWidth + " mHeight = " + mHeight);
+
+                Size size = getBestPreviewSize(sizes, previwRatio);
+                mWidth = size.width;
+                mHeight = size.height;
+                Log.i(TAG_THREAD, "after mWidth = " + mWidth + " mHeight = " + mHeight);
+            }
 		}
 
-		public void handleClose() {
+		public Size getBestPreviewSize(List<Size> sizes, String previewRation) {
+            Size size = sizes.get(sizes.size() - 1);
+            List<Size> matchSizes = new ArrayList<>();
+            for(Size s : sizes){
+                String sizeRatio = getSurfaceViewSize(s.width, s.height);
+                if(previewRation.equals(sizeRatio)) {
+                    matchSizes.add(s);
+                }
+            }
+            Size bestSize = matchSizes.get(0);
+            int lagerSize = bestSize.width * bestSize.height;
+            for(Size s : matchSizes) {
+                int temp = s.width * s.height;
+                if(temp > lagerSize) {
+                    lagerSize = temp;
+                    bestSize = s;
+                }
+            }
+
+            return bestSize;
+        }
+
+        public String getSurfaceViewSize(int width, int height) {
+            if (equalRate(width, height, 1.33f)) {
+                return "4:3";
+            } else {
+                return "16:9";
+            }
+        }
+
+
+        public boolean equalRate(int width, int height, float rate) {
+            float r = (float)width /(float) height;
+            if (Math.abs(r - rate) <= 0.2) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public void handleClose() {
 			if (DEBUG) Log.v(TAG_THREAD, "handleClose:");
 			handleStopRecording();
 			final UVCCamera camera;

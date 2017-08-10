@@ -61,8 +61,8 @@ public class CameraDialog extends DialogFragment {
 	 * @param parent FragmentActivity
 	 * @return
 	 */
-	public static CameraDialog showDialog(final Activity parent/* add parameters here if you need */) {
-		CameraDialog dialog = newInstance(/* add parameters here if you need */);
+	public static CameraDialog showDialog(final Activity parent/* add parameters here if you need */, USBMonitor monitor) {
+		CameraDialog dialog = newInstance(/* add parameters here if you need */monitor);
 		try {
 			dialog.show(parent.getFragmentManager(), TAG);
 		} catch (final IllegalStateException e) {
@@ -71,8 +71,8 @@ public class CameraDialog extends DialogFragment {
     	return dialog;
 	}
 
-	public static CameraDialog newInstance(/* add parameters here if you need */) {
-		final CameraDialog dialog = new CameraDialog();
+	public static CameraDialog newInstance(/* add parameters here if you need */USBMonitor monitor) {
+		final CameraDialog dialog = new CameraDialog(monitor);
 		final Bundle args = new Bundle();
 		// add parameters here if you need
 		dialog.setArguments(args);
@@ -87,19 +87,24 @@ public class CameraDialog extends DialogFragment {
 		// Fragment need default constructor
 	}
 
+	public CameraDialog(USBMonitor monitor) {
+        mUSBMonitor = monitor;
+    }
+
 	@SuppressWarnings("deprecation")
 	@Override
 	public void onAttach(final Activity activity) {
 		super.onAttach(activity);
-       if (mUSBMonitor == null)
-        try {
-    		mUSBMonitor = ((CameraDialogParent)activity).getUSBMonitor();
-        } catch (final ClassCastException e) {
-    	} catch (final NullPointerException e) {
-        }
-		if (mUSBMonitor == null) {
-        	throw new ClassCastException(activity.toString() + " must implement CameraDialogParent#getUSBController");
-		}
+//       if (mUSBMonitor == null)
+//        try {
+//
+//    		mUSBMonitor = ((CameraDialogParent)activity).getUSBMonitor();
+//        } catch (final ClassCastException e) {
+//    	} catch (final NullPointerException e) {
+//        }
+//		if (mUSBMonitor == null) {
+//        	throw new ClassCastException(activity.toString() + " must implement CameraDialogParent#getUSBController");
+//		}
 	}
 
 	@Override
@@ -173,11 +178,11 @@ public class CameraDialog extends DialogFragment {
 				final Object item = mSpinner.getSelectedItem();
 				if (item instanceof UsbDevice) {
 					mUSBMonitor.requestPermission((UsbDevice)item);
-					((CameraDialogParent)getActivity()).onDialogResult(false);
+//					((CameraDialogParent)getActivity()).onDialogResult(false);
 				}
 				break;
 			case DialogInterface.BUTTON_NEGATIVE:
-				((CameraDialogParent)getActivity()).onDialogResult(true);
+//				((CameraDialogParent)getActivity()).onDialogResult(true);
 				break;
 			}
 		}
@@ -185,7 +190,7 @@ public class CameraDialog extends DialogFragment {
 
 	@Override
 	public void onCancel(final DialogInterface dialog) {
-		((CameraDialogParent)getActivity()).onDialogResult(true);
+//		((CameraDialogParent)getActivity()).onDialogResult(true);
 		super.onCancel(dialog);
 	}
 
